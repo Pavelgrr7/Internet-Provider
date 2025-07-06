@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/tariffs")
@@ -29,14 +31,19 @@ public class TariffController {
         return new ResponseEntity<>(createdTariff, HttpStatus.CREATED);
     }
 
+    @GetMapping
+    public ResponseEntity<List<TariffResponseDto>> getAllTariffs() {
+        List<TariffResponseDto> tariffs = tariffService.getAll();
+        return ResponseEntity.ok(tariffs);
+
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<TariffResponseDto> getTariffById(@PathVariable Long id) {
         // TariffService находит Entity в БД, превращает ее в DTO и возвращает.
-        try {
             TariffResponseDto tariff = tariffService.getById(id);
             return ResponseEntity.ok(tariff);
-        } catch (ResourceNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 }

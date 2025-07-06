@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Data
 public class TariffCreateDto {
 
+    private BigDecimal tariffId;
+
     @NotBlank(message = "Название тарифа не может быть пустым")
     @Size(max = 100, message = "Название тарифа не может превышать 100 символов")
     private String name; // Упрощенное имя поля
@@ -26,6 +28,6 @@ public class TariffCreateDto {
     private String ipAddressType;
 
     @NotNull(message = "Дата начала действия тарифа обязательна")
-    @FutureOrPresent(message = "Дата начала не может быть в прошлом")
+//    @FutureOrPresent(message = "Дата начала не может быть в прошлом")
     private LocalDate startDate;
 }
