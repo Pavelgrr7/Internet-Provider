@@ -9,6 +9,9 @@ import com.pavelryzh.provider.service.TariffService;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class TariffServiceImpl implements TariffService {
 
@@ -51,9 +54,9 @@ public class TariffServiceImpl implements TariffService {
      */
 
     @Override
-    public TariffResponseDto getById(Long id) throws ResourceNotFoundException {
+    public TariffResponseDto getById(Long id) {
         // --- Взаимодействие с репозиторием ---
-        // искл. если сущность не найдена.
+        // искл, если сущность не найдена.
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + id + " не найден."));
 
@@ -61,6 +64,15 @@ public class TariffServiceImpl implements TariffService {
         return toResponseDto(tariff);
     }
 
+    @Override
+    public List<TariffResponseDto> getAll() {
+
+        List<Tariff> tariffs = tariffRepository.findAll();
+
+        return tariffs.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
 
     private TariffResponseDto toResponseDto(Tariff tariff) {
         TariffResponseDto dto = new TariffResponseDto();

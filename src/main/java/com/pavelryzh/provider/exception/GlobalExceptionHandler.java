@@ -1,20 +1,36 @@
 package com.pavelryzh.provider.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-//
-//@ControllerAdvice
-//public class GlobalExceptionHandler {
-//
-//    @ExceptionHandler(ResourceNotFoundException.class)
-//    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-//        // Статус 404
-//        return new ResponseEntity<>(new ErrorResponse(ex.getMessage()) {
-//        }, HttpStatus.NOT_FOUND);
-//    }
-//}
+
+import java.time.Instant;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleResourceNotFound(ResourceNotFoundException ex) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+
+        problemDetail.setTitle("Ресурс не найден");
+
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return new ResponseEntity<>(problemDetail, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Некорректный запрос");
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return new ResponseEntity<>(problemDetail, HttpStatus.BAD_REQUEST);
+    }
+
+    //todo остальные исключения
+}
