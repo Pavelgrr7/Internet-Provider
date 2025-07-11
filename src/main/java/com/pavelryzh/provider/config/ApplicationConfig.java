@@ -1,6 +1,5 @@
 package com.pavelryzh.provider.config;
 
-// в пакете config
 import com.pavelryzh.provider.repository.SubscriberRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

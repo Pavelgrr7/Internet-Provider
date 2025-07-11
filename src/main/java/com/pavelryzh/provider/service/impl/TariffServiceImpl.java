@@ -2,6 +2,7 @@ package com.pavelryzh.provider.service.impl;
 
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
 import com.pavelryzh.provider.model.Tariff;
 import com.pavelryzh.provider.repository.TariffRepository;
@@ -28,8 +29,7 @@ public class TariffServiceImpl implements TariffService {
     @Override
     @Transactional // изменение данных в бд -> transactional
     public TariffResponseDto create(TariffCreateDto createDto) {
-        // --- Бизнес-логика и валидация ---
-        // временно для примера проверка существования тарифа с таким именем.
+
         if (tariffRepository.existsByName(createDto.getName())) {
             throw new IllegalArgumentException("Тариф с названием '" + createDto.getName() + "' уже существует.");
         }
@@ -74,14 +74,49 @@ public class TariffServiceImpl implements TariffService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Метод для обновления тарифа
+     */
+
+    @Override
+    @Transactional
+    public TariffResponseDto update(Long id, TariffUpdateDto updateDto) {
+
+        Tariff existingTariff = tariffRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + id + " не найден."));
+
+        if (updateDto.getName() != null) {
+            existingTariff.setName(updateDto.getName());
+        }
+        if (updateDto.getDeclaredSpeed() != null) {
+            existingTariff.setDeclaredSpeed(updateDto.getDeclaredSpeed());
+        }
+        if (updateDto.getInstallationFee() != null) {
+            existingTariff.setInstallationFee(updateDto.getInstallationFee());
+        }
+        if (updateDto.getIpAddressType() != null) {
+            existingTariff.setIpAddressType(updateDto.getIpAddressType());
+        }
+        if (updateDto.getStartDate() != null) {
+            existingTariff.setStartDate(updateDto.getStartDate());
+        }
+
+        // JPA SQL UPDATE.
+        Tariff savedTariff = tariffRepository.save(existingTariff);
+
+        return toResponseDto(savedTariff);
+    }
+
     private TariffResponseDto toResponseDto(Tariff tariff) {
         TariffResponseDto dto = new TariffResponseDto();
+
         dto.setId(tariff.getId());
         dto.setName(tariff.getName());
         dto.setDeclaredSpeed(tariff.getDeclaredSpeed());
         dto.setInstallationFee(tariff.getInstallationFee());
         dto.setIpAddressType(tariff.getIpAddressType());
         dto.setStartDate(tariff.getStartDate());
+
         return dto;
     }
 
