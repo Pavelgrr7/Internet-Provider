@@ -13,4 +13,5 @@ public interface TariffService {
     TariffResponseDto getById(Long id);
     List<TariffResponseDto> getAll();
     TariffResponseDto update(Long id, @Valid TariffUpdateDto updateDto);
+    void remove(Long id);
 }

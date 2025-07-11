@@ -107,6 +107,15 @@ public class TariffServiceImpl implements TariffService {
         return toResponseDto(savedTariff);
     }
 
+    /**
+     * Метод для удаления тарифа
+     */
+
+    @Override
+    public void remove(Long id) {
+        tariffRepository.deleteById(id);
+    }
+
     private TariffResponseDto toResponseDto(Tariff tariff) {
         TariffResponseDto dto = new TariffResponseDto();
 

@@ -8,8 +8,10 @@ import com.pavelryzh.provider.service.TariffService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -24,15 +26,19 @@ public class TariffController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TariffResponseDto> createTariff(@Valid @RequestBody TariffCreateDto createDto) {
-        // 1. Принимаем TariffCreateDto. @Valid запускает валидацию.
+
         // 2. TariffService внутри себя превращает DTO в Entity и сохраняет в БД.
         // 3. TariffService возвращает нам DTO для ответа.
+
         TariffResponseDto createdTariff = tariffService.create(createDto);
-        return new ResponseEntity<>(createdTariff, HttpStatus.CREATED);
+        URI location = URI.create(String.format("/api/tariffs/%d", createdTariff.getId()));
+        return ResponseEntity.created(location).body(createdTariff);
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TariffResponseDto>> getAllTariffs() {
         List<TariffResponseDto> tariffs = tariffService.getAll();
         return ResponseEntity.ok(tariffs);
@@ -41,6 +47,7 @@ public class TariffController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TariffResponseDto> getTariffById(@PathVariable Long id) {
             TariffResponseDto tariff = tariffService.getById(id);
             return ResponseEntity.ok(tariff);
@@ -48,6 +55,7 @@ public class TariffController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TariffResponseDto> updateTariffById(
             @PathVariable Long id,
             @Valid @RequestBody TariffUpdateDto updateDto) {
@@ -55,5 +63,12 @@ public class TariffController {
         TariffResponseDto updatedTariff = tariffService.update(id, updateDto);
 
         return ResponseEntity.ok(updatedTariff);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteTariffById(@PathVariable Long id) {
+        tariffService.remove(id);
+        return ResponseEntity.noContent().build();
     }
 }
