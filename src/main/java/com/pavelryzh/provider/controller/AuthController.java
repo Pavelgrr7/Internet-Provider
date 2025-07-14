@@ -25,7 +25,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
         // Сервис аутентификации проверит данные и в случае успеха вернет DTO с токеном
-        AuthResponseDto authResponse = authService.attemptLogin(loginRequest.getLogin(), loginRequest.getPasswordHash());
+        AuthResponseDto authResponse = authService.attemptLogin(loginRequest.getLogin(), loginRequest.getPassword());
         return ResponseEntity.ok(authResponse);
     }
 }

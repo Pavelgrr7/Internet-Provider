@@ -10,5 +10,5 @@ public class LoginRequestDto {
     private String login;
 
     @NotBlank(message = "Пароль не может быть пустым")
-    private String passwordHash;
+    private String password;
 }
