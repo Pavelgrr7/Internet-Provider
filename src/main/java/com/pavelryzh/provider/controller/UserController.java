@@ -1,11 +1,13 @@
 package com.pavelryzh.provider.controller;
 
 
-import com.pavelryzh.provider.dto.subscriber.EmailChangeDto;
-import com.pavelryzh.provider.dto.subscriber.PasswordChangeDto;
-import com.pavelryzh.provider.dto.subscriber.SubscriberResponseDto;
+import com.pavelryzh.provider.dto.user.EmailChangeDto;
+import com.pavelryzh.provider.dto.user.PasswordChangeDto;
+import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
-import com.pavelryzh.provider.service.SubscriberService;
+import com.pavelryzh.provider.model.User;
+import com.pavelryzh.provider.service.ContractService;
+import com.pavelryzh.provider.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,32 +20,44 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-    SubscriberService subscriberService;
+//    SubscriberService subscriberService;
 
-    public UserController(SubscriberService subscriberService) {
-        this.subscriberService = subscriberService;
+    private final UserService userService;
+//    private final ContractService contractService;
+
+    public UserController(UserService userService
+//            ,
+//                          ContractService contractService
+    ) {
+        this.userService = userService;
+//        this.contractService = contractService;
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<SubscriberResponseDto> getUserData(Authentication authentication) {
-        Subscriber currentUser = (Subscriber) authentication.getPrincipal();
+//    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getUserData(Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        if (currentUser instanceof Subscriber subscriber) {
+            var dto = userService.getSubscriberById(subscriber.getId());
+            return ResponseEntity.ok(dto);
 
-        log.info("profile requested for user: {}", currentUser.getAuthorities());
-        SubscriberResponseDto dto = subscriberService.getById(currentUser.getId());
-        log.info("response: {}", dto.toString());
-        return ResponseEntity.ok(dto);
+        } else if (currentUser instanceof Administrator admin) {
+            var dto = userService.getAdminById(admin.getId());
+            return ResponseEntity.ok(dto);
+
+        } else return ResponseEntity.badRequest().build();
     }
+
     @PatchMapping("/my/password")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePassword(
             Authentication authentication,
             @Valid @RequestBody PasswordChangeDto passwordChangeDto) {
 
-        Subscriber currentUser = (Subscriber) authentication.getPrincipal();
-        subscriberService.changePassword(currentUser.getId(), passwordChangeDto);
+        User currentUser = (User) authentication.getPrincipal();
+        userService.changePassword(currentUser.getId(), passwordChangeDto);
 
-        return ResponseEntity.ok().build(); // Возвращаем 200 OK без тела
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/my/email")
@@ -52,8 +66,8 @@ public class UserController {
             Authentication authentication,
             @Valid @RequestBody EmailChangeDto emailChangeDto) {
 
-        Subscriber currentUser = (Subscriber) authentication.getPrincipal();
-        subscriberService.changeEmail(currentUser.getId(), emailChangeDto.getNewEmail());
+        User currentUser = (User) authentication.getPrincipal();
+        userService.changeEmail(currentUser.getId(), emailChangeDto.getNewEmail());
 
         return ResponseEntity.ok().build();
     }
