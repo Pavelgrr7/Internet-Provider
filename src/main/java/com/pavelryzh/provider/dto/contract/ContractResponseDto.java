@@ -15,7 +15,7 @@ public class ContractResponseDto {
     @Id
     private long id;
 
-    private long contractNumber;
+    private String contractNumber;
 
     private long subscriberId;
 

@@ -18,7 +18,7 @@ public class Contract {
     private Long id;
 
     @NotNull
-    private Long contractNumber;
+    private String contractNumber;
 
     @NotNull
     private Long subscriberId;

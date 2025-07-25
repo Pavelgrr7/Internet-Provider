@@ -13,7 +13,7 @@ import java.time.LocalDate;
 public class ContractCreateDto {
     private Long id;
 
-    private Long contractNumber;
+    private String contractNumber;
 
     private Long subscriberId;
 

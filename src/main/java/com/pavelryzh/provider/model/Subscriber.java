@@ -14,6 +14,9 @@ public class Subscriber extends User {
     @Column(name = "passport_series_number", unique = true)
     private String passportSeriesNumber;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @Override
     public String getRole() {
         return "ROLE_USER";

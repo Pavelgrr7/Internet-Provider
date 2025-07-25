@@ -3,6 +3,7 @@ package com.pavelryzh.provider.controller;
 
 import com.pavelryzh.provider.dto.user.EmailChangeDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
+import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
 import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
@@ -15,22 +16,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-//    SubscriberService subscriberService;
-
     private final UserService userService;
-//    private final ContractService contractService;
 
-    public UserController(UserService userService
-//            ,
-//                          ContractService contractService
-    ) {
+    public UserController(UserService userService) {
         this.userService = userService;
-//        this.contractService = contractService;
     }
 
     @GetMapping("/my")
@@ -70,5 +66,13 @@ public class UserController {
         userService.changeEmail(currentUser.getId(), emailChangeDto.getNewEmail());
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/subscribers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SubscriberListItemDto>> getAllSubscribers() {
+        List<SubscriberListItemDto> subscribers = userService.getAllSubscribers();
+        log.info("sent subscribers: {}", subscribers);
+        return ResponseEntity.ok(subscribers);
     }
 }

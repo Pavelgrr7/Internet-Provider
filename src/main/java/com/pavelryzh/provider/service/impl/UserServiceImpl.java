@@ -1,8 +1,11 @@
 package com.pavelryzh.provider.service.impl;
 
+import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.admin.AdminResponseDto;
+import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberCreateDto;
+import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberResponseDto;
 import com.pavelryzh.provider.exception.AuthException;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
@@ -10,20 +13,29 @@ import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.repository.UserRepository;
+import com.pavelryzh.provider.service.ContractService;
 import com.pavelryzh.provider.service.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
         private final UserRepository userRepository;
         private final PasswordEncoder passwordEncoder;
+        private final ContractService contractService;
 
-        public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ContractService contractService) {
             this.userRepository = userRepository;
             this.passwordEncoder = passwordEncoder;
+            this.contractService = contractService;
         }
 
         public SubscriberResponseDto createSubscriber(SubscriberCreateDto createDto) {
@@ -52,7 +64,6 @@ public class UserServiceImpl implements UserService {
 
         return toSubscriberDto((Subscriber) subscriber);
     }
-
 
     @Override
     public AdminResponseDto getAdminById(Long id) {
@@ -105,5 +116,38 @@ public class UserServiceImpl implements UserService {
             responseDto.setEmail(savedAdmin.getEmail());
             responseDto.setLogin(savedAdmin.getLogin());
             return responseDto;
+    }
+
+    @Override
+    @Transactional
+    public List<SubscriberListItemDto> getAllSubscribers() {
+
+            // получение всех абонентов
+        List<Subscriber> subscribers = userRepository.findAllSubscribers();
+        if (subscribers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> subscriberIds = subscribers.stream().map(User::getId).collect(Collectors.toList());
+
+        Map<Long, List<ContractInfo>> contractsBySubscriberId =
+                contractService.getContractInfoForUserIds(subscriberIds);
+
+        return subscribers.stream().map(subscriber -> {
+            SubscriberListItemDto dto = new SubscriberListItemDto();
+            dto.setId(subscriber.getId());
+            dto.setFirstName(subscriber.getFirstName());
+            dto.setMiddleName(subscriber.getMiddleName());
+            dto.setLastName(subscriber.getLastName());
+            dto.setLogin(subscriber.getLogin());
+            dto.setEmail(subscriber.getEmail());
+            dto.setPassportSeriesNumber(subscriber.getPassportSeriesNumber());
+            dto.setPhoneNumber(subscriber.getPhoneNumber());
+
+            List<ContractInfo> userContracts = contractsBySubscriberId.getOrDefault(subscriber.getId(), Collections.emptyList());
+            dto.setContracts(userContracts);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
