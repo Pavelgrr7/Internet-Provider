@@ -21,7 +21,7 @@ import java.util.List;
 @Setter
 public class Subscriber implements UserDetails {
     @Id
-    private BigDecimal id;
+    private long id;
 
     private String passportSeriesNumber;
 
@@ -62,7 +62,7 @@ public class Subscriber implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return login;
     }
 
     @Override

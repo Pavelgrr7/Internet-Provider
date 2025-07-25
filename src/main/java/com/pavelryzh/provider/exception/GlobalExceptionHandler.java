@@ -32,5 +32,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(problemDetail, HttpStatus.BAD_REQUEST);
     }
 
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ProblemDetail> handleAuthException(AuthException ex) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+
+        problemDetail.setTitle("Ошибка аутентификации. Проверьте введённые данные");
+
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return new ResponseEntity<>(problemDetail, HttpStatus.UNAUTHORIZED);
+    }
     //todo остальные исключения
 }

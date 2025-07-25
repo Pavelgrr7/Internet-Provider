@@ -1,0 +1,31 @@
+package com.pavelryzh.provider.dto.contract;
+
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Data
+//@AllArgsConstructor
+public class ContractResponseDto {
+
+    @Id
+    private long id;
+
+    private long contractNumber;
+
+    private long subscriberId;
+
+    @NotNull
+    private String serviceAddress;
+
+    private LocalDate signingDate;
+
+    private LocalDate serviceStartDate;
+
+    private BigDecimal monthlyFee;
+
+}

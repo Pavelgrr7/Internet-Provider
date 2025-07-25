@@ -10,4 +10,9 @@ import java.util.Optional;
 public interface SubscriberRepository extends JpaRepository<Subscriber, Long>{
     Optional<Subscriber> findByLogin(String login);
     boolean existsByLogin(String name);
+
+
+//    void updateSubscriberByEmail(String email);
+//
+//    void updateSubscriberByPassword(String hashedPassword);
 }
