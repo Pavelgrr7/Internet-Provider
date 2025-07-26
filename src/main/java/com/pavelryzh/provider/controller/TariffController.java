@@ -3,6 +3,7 @@ package com.pavelryzh.provider.controller;
 import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.service.TariffService;
 import jakarta.validation.Valid;
@@ -79,6 +80,17 @@ public class TariffController {
         log.info("Отправка доступных услуг для контракта {}: {}", contractId, tariffService.getAvailableServicesForContract(contractId));
 
         return ResponseEntity.ok(tariffService.getAvailableServicesForContract(contractId));
+    }
+
+    @GetMapping("/active-in-year")
+    public ResponseEntity<List<TariffSelectionDto>> getActiveTariffs(@RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(tariffService.findActiveTariffs(year));
+    }
+
+    // Эндпоинт для получения годов, в которые был активен тариф
+    @GetMapping("/{tariffId}/active-years")
+    public ResponseEntity<List<Integer>> getActiveYears(@PathVariable Long tariffId) {
+        return ResponseEntity.ok(tariffService.findActiveYearsForTariff(tariffId));
     }
 
 }

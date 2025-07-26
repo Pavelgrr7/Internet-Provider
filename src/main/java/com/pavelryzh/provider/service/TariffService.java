@@ -4,6 +4,7 @@ package com.pavelryzh.provider.service;
 import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import jakarta.validation.Valid;
 
@@ -18,4 +19,7 @@ public interface TariffService {
     List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId);
     List<AdditionalServiceResponseDto> getAvailableServicesForContract(Long contractId);
 
+    List<TariffSelectionDto> findActiveTariffs(Integer year);
+
+    List<Integer> findActiveYearsForTariff(Long tariffId);
 }

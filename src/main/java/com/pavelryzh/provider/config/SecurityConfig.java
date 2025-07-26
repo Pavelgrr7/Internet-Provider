@@ -30,7 +30,9 @@ public class SecurityConfig {
 
     private final AuthenticationProvider authenticationProvider;
 
-    private static final String[] WHITE_LIST_URL = { "/api/auth/login", "/api/tariffs", "/api/**", "/api/contracts", "/api/users/subscribers", "/api/contracts/my/detailed"};
+    private static final String[] WHITE_LIST_URL = { "/api/auth/login",
+            "/api/tariffs", "/api/**", "/api/contracts",
+            "/api/users/subscribers", "/api/contracts/my/detailed", "/api/reports"};
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtAuthFilter jwtAuthFilter, AuthEntryPointJwt unauthorizedHandler
 //            ,

@@ -4,6 +4,7 @@ import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
 import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
 import com.pavelryzh.provider.model.AdditionalService;
@@ -15,9 +16,12 @@ import com.pavelryzh.provider.service.TariffService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class TariffServiceImpl implements TariffService {
@@ -152,6 +156,38 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    public List<TariffSelectionDto> findActiveTariffs(Integer year) {
+        if (year == null) {
+            return tariffRepository.findAll().stream()
+                    .map(this::toSelectionDto)
+                    .toList();
+        } else {
+            return tariffRepository.findAllActiveByYear(year)
+                    .stream()
+                    .map(this::toSelectionDto)
+                    .toList();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true) // Добавляем транзакцию, т.к. есть обращение к БД
+    public List<Integer> findActiveYearsForTariff(Long tariffId) {
+        // 1. Получаем дату начала действия тарифа
+        LocalDate startDate = tariffRepository.findById(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."))
+                .getStartDate();
+
+        int startYear = startDate.getYear();
+        int currentYear = Year.now().getValue(); // Более правильный способ получить текущий год
+
+        // 2. Генерируем поток целых чисел от startYear до currentYear (включительно)
+        return IntStream.rangeClosed(startYear, currentYear)
+                .boxed() // 3. Превращаем примитивный IntStream в Stream<Integer>
+                .sorted((y1, y2) -> y2.compareTo(y1)) // 4. Сортируем в обратном порядке (от нового к старому)
+                .collect(Collectors.toList()); // 5. Собираем результат в список
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId) {
         // 1. Находим тариф вместе с его услугами ОДНИМ запросом
@@ -183,5 +219,11 @@ public class TariffServiceImpl implements TariffService {
         tariff.setIpAddressType(createDto.getIpAddressType());
         tariff.setStartDate(createDto.getStartDate());
         return tariff;
+    }
+
+    private TariffSelectionDto toSelectionDto(Tariff tariff) {
+        return new TariffSelectionDto(
+                tariff.getId(),
+                tariff.getName());
     }
 }

@@ -1,27 +1,23 @@
 package com.pavelryzh.provider.dto.report;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 @Data
-@AllArgsConstructor
 public class ReportResponseDto {
 
     @NonNull
-    private String reportYear;
+    private Integer reportYear;
 
-    @NonNull
-    private BigDecimal tariffName;
+    private String tariffName;
 
-    @NonNull
-    private BigInteger subscriberCount;
+    private Long tariffId;
 
-    @NonNull
-    private Double totalPayments;
+    private Long subscriberCount;
+
+    private BigDecimal totalPayments;
 
     private Integer minDurationDays;
 

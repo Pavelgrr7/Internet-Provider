@@ -1,20 +1,17 @@
 package com.pavelryzh.provider.dto.report;
 
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.NonNull;
 
-import java.math.BigDecimal;
-
-@AllArgsConstructor
 @Data
 public class ReportCreateDto {
+    @NotNull(message = "Год отчета не может быть пустым")
+    @Min(value = 1991, message = "Год отчета должен быть после 1990")
+    private Integer reportYear;
 
-    @NonNull
-    private String reportYear;
-
-    @NonNull
-    private BigDecimal tariffName;
+    @NotNull(message = "ID тарифа не может быть пустым")
+    private Long tariffId;
 
 }
