@@ -1,10 +1,12 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.service.TariffService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/tariffs")
 public class TariffController {
@@ -69,4 +71,13 @@ public class TariffController {
         tariffService.remove(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/available-for-contract/{contractId}")
+    public ResponseEntity<List<AdditionalServiceResponseDto>> getAvailableServicesForContract(@PathVariable Long contractId) {
+
+        log.info("Отправка доступных услуг для контракта {}: {}", contractId, tariffService.getAvailableServicesForContract(contractId));
+
+        return ResponseEntity.ok(tariffService.getAvailableServicesForContract(contractId));
+    }
+
 }

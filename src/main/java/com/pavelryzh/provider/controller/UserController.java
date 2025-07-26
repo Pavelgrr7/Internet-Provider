@@ -1,13 +1,11 @@
 package com.pavelryzh.provider.controller;
 
-
 import com.pavelryzh.provider.dto.user.EmailChangeDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
 import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
-import com.pavelryzh.provider.service.ContractService;
 import com.pavelryzh.provider.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

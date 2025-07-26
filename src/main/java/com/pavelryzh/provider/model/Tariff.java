@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "Tariffs")
@@ -27,5 +28,13 @@ public class Tariff {
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tariff_services",
+            joinColumns = @JoinColumn(name = "tariff_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    private List<AdditionalService> availableServices;
 
 }

@@ -1,10 +1,8 @@
 package com.pavelryzh.provider.controller;
 
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
-import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
-import com.pavelryzh.provider.dto.user.subscriber.SubscriberResponseDto;
+import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.model.Subscriber;
-import com.pavelryzh.provider.repository.UserRepository;
 import com.pavelryzh.provider.service.ContractService;
 import com.pavelryzh.provider.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +41,18 @@ public class ContractController {
 
         List<ContractResponseDto> contracts = contractService.getContractsByUserId(currentUserId);
         log.info("Contracts response {}", contracts);
+        return ResponseEntity.ok(contracts);
+    }
+
+    @GetMapping("/my/detailed")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<ContractWithServicesDto>> getMyContractDetails(Authentication authentication) {
+        Subscriber currentUser = (Subscriber) authentication.getPrincipal();
+
+        long currentUserId = currentUser.getId();
+
+        List<ContractWithServicesDto> contracts = contractService.getContractsWithServicesForUser(currentUserId);
+        log.info("Detailed contracts response {}", contracts);
         return ResponseEntity.ok(contracts);
     }
 

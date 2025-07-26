@@ -1,6 +1,7 @@
 package com.pavelryzh.provider.service;
 
 
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
@@ -14,4 +15,7 @@ public interface TariffService {
     List<TariffResponseDto> getAll();
     TariffResponseDto update(Long id, @Valid TariffUpdateDto updateDto);
     void remove(Long id);
+    List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId);
+    List<AdditionalServiceResponseDto> getAvailableServicesForContract(Long contractId);
+
 }

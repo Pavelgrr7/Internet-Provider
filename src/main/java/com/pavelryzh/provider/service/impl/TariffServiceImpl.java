@@ -1,25 +1,32 @@
 package com.pavelryzh.provider.service.impl;
 
+import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
+import com.pavelryzh.provider.model.AdditionalService;
+import com.pavelryzh.provider.model.Contract;
 import com.pavelryzh.provider.model.Tariff;
+import com.pavelryzh.provider.repository.ContractRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.service.TariffService;
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
-
-    public TariffServiceImpl(TariffRepository tariffRepository) {
+    private final ContractRepository contractRepository;
+    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository) {
         this.tariffRepository = tariffRepository;
+        this.contractRepository = contractRepository;
     }
 
     /**
@@ -114,6 +121,45 @@ public class TariffServiceImpl implements TariffService {
     @Override
     public void remove(Long id) {
         tariffRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdditionalServiceResponseDto> getAvailableServicesForContract(Long contractId) {
+        // 1. ВСЕ услуги, доступные для данного тарифа
+
+        var tariffId = contractRepository.findById(contractId).orElseThrow(() -> new ResourceNotFoundException("Контракт с ID " + contractId + " не найден."))
+                .getTariffId();
+
+        List<AdditionalService> allServicesForTariff = tariffRepository.findByIdWithAvailableServices(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."))
+                .getAvailableServices();
+
+        // 2. Получаем ВСЕ услуги, УЖЕ ПОДКЛЮЧЕННЫЕ к данному договору
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден"));
+        Set<Long> connectedServiceIds = contract.getServices().stream()
+                .map(AdditionalService::getServiceId)
+                .collect(Collectors.toSet());
+
+        // 3. Фильтруем и возвращаем только те, которые еще не подключены
+        List<AdditionalService> availableServices = allServicesForTariff.stream()
+                .filter(service -> !connectedServiceIds.contains(service.getServiceId()))
+                .collect(Collectors.toList());
+
+        // 4. Маппим результат в DTO
+        return AdditionalServiceMapper.toDtoList(availableServices);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId) {
+        // 1. Находим тариф вместе с его услугами ОДНИМ запросом
+        Tariff tariff = tariffRepository.findByIdWithAvailableServices(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."));
+
+        // 2. Просто возвращаем уже загруженный список услуг, предварительно смапив его
+        return AdditionalServiceMapper.toDtoList(tariff.getAvailableServices());
     }
 
     private TariffResponseDto toResponseDto(Tariff tariff) {
