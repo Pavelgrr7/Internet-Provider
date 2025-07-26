@@ -16,4 +16,8 @@ public interface ContractService {
 
     ContractResponseDto getContractDtoById(Long contractId);
     Map<Long, List<ContractInfo>> getContractInfoForUserIds(List<Long> subscriberIds);
+
+    void removeServiceFromContract(Long userId, Long contractId, Long serviceId);
+
+    void addServiceToContract(Long userId, Long contractId, Long serviceId);
 }

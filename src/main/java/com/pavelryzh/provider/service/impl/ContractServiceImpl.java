@@ -4,37 +4,37 @@ import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
-import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
 import com.pavelryzh.provider.model.AdditionalService;
 import com.pavelryzh.provider.model.Contract;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.Tariff;
+import com.pavelryzh.provider.repository.AdditionalServiceRepository;
 import com.pavelryzh.provider.repository.ContractRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.repository.UserRepository;
 import com.pavelryzh.provider.service.ContractService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ContractServiceImpl implements ContractService {
 
+    private final AdditionalServiceRepository additionalServiceRepository;
     private final ContractRepository contractRepository;
-    private final UserRepository subscriberRepository;
+    private final UserRepository userRepository;
     private final TariffRepository tariffRepository;
 
-    public ContractServiceImpl(ContractRepository contractRepository, UserRepository subscriberRepository, TariffRepository tariffRepository) {
+    public ContractServiceImpl(ContractRepository contractRepository, UserRepository userRepository, TariffRepository tariffRepository, AdditionalServiceRepository additionalServiceRepository) {
         this.contractRepository = contractRepository;
-        this.subscriberRepository = subscriberRepository;
+        this.userRepository = userRepository;
         this.tariffRepository = tariffRepository;
+        this.additionalServiceRepository = additionalServiceRepository;
     }
     @Override
     @Transactional
@@ -79,6 +79,61 @@ public class ContractServiceImpl implements ContractService {
         }
 
         return contractsInfoMap;
+    }
+
+    @Transactional
+    public void removeServiceFromContract(Long userId, Long contractId, Long serviceId) {
+        // 1. Найти договор и убедиться, что он принадлежит текущему пользователю
+
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден"));
+
+        if (!Objects.equals(userRepository.findById(userId).orElseThrow().getRole(), "ROLE_ADMIN")) {
+            if (!contract.getSubscriber().getId().equals(userId)) {
+                throw new AccessDeniedException("Вы не можете изменять чужой договор");
+            }
+        }
+
+        // 2. Найти услугу в списке услуг этого договора
+        AdditionalService serviceToRemove = contract.getServices().stream()
+                .filter(service -> service.getServiceId().equals(serviceId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Услуга не найдена в этом договоре"));
+
+        // 3. Удалить услугу из коллекции.
+        contract.getServices().remove(serviceToRemove);
+
+         contractRepository.save(contract); // для читаемости
+    }
+
+    @Override
+    @Transactional
+    public void addServiceToContract(Long userId, Long contractId, Long serviceId) {
+
+        // 1. Найти договор
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден"));
+
+        if (!contract.getSubscriber().getId().equals(userId)) {
+            throw new AccessDeniedException("Вы не можете изменять чужой договор");
+        }
+
+        // 3. ПРОВЕРКА НА ДУБЛИКАТ: Проверить, не подключена ли уже услуга
+        boolean isServiceAlreadyConnected = contract.getServices().stream()
+                .anyMatch(service -> service.getServiceId().equals(serviceId));
+
+        if (isServiceAlreadyConnected) {
+            // Используем более подходящий тип исключения
+            throw new IllegalArgumentException("Эта услуга уже подключена к данному договору.");
+        }
+
+        AdditionalService serviceToAdd = additionalServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Услуга с ID " + serviceId + " не найдена"));
+
+        // 5. Добавить услугу в коллекцию.
+        contract.getServices().add(serviceToAdd);
+
+         contractRepository.save(contract);
     }
 
     @Override
@@ -134,7 +189,7 @@ public class ContractServiceImpl implements ContractService {
         Contract contract = new Contract();
 
         // Получаем "ссылки" на сущности, не загружая их полностью из БД.
-        Subscriber subscriberReference = (Subscriber) subscriberRepository.getReferenceById(createDto.getSubscriberId());
+        Subscriber subscriberReference = (Subscriber) userRepository.getReferenceById(createDto.getSubscriberId());
         Tariff tariffReference = tariffRepository.getReferenceById(createDto.getTariffId());
 
         contract.setContractNumber(createDto.getContractNumber());

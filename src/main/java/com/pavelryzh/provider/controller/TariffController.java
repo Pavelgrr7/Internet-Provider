@@ -73,6 +73,7 @@ public class TariffController {
     }
 
     @GetMapping("/available-for-contract/{contractId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AdditionalServiceResponseDto>> getAvailableServicesForContract(@PathVariable Long contractId) {
 
         log.info("Отправка доступных услуг для контракта {}: {}", contractId, tariffService.getAvailableServicesForContract(contractId));
