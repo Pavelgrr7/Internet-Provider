@@ -59,6 +59,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             // 5. Валидность токена
             if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                logger.info("user " + userLogin + ", token is valid");
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
@@ -68,6 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
                 // 6. Сохраняем аутентификацию в контексте безопасности
+                logger.info(String.format("Setting authentication for user: %s, with authorities: %s", userLogin, userDetails.getAuthorities()));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

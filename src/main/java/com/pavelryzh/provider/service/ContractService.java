@@ -3,6 +3,7 @@ package com.pavelryzh.provider.service;
 import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
+import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 
 import java.util.List;
@@ -20,4 +21,8 @@ public interface ContractService {
     void removeServiceFromContract(Long userId, Long contractId, Long serviceId);
 
     void addServiceToContract(Long userId, Long contractId, Long serviceId);
+
+    ChangeTariffPreviewDto getTariffChangePreview(Long id, Long contractId, Long newTariffId);
+
+    ContractWithServicesDto changeTariff(Long userId, Long contractId, Long tariffId);
 }

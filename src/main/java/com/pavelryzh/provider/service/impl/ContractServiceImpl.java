@@ -4,6 +4,7 @@ import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
+import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
 import com.pavelryzh.provider.model.AdditionalService;
@@ -15,13 +16,16 @@ import com.pavelryzh.provider.repository.ContractRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.repository.UserRepository;
 import com.pavelryzh.provider.service.ContractService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ContractServiceImpl implements ContractService {
 
@@ -36,9 +40,36 @@ public class ContractServiceImpl implements ContractService {
         this.tariffRepository = tariffRepository;
         this.additionalServiceRepository = additionalServiceRepository;
     }
+
+    /**
+     * Центральный метод для пересчета и сохранения месячной платы.
+     * Является приватным, т.к. это внутренняя логика сервиса.
+     * @param contract Сущность договора, для которой нужно выполнить пересчет.
+     */
+    private void recalculateAndSetMonthlyFee(Contract contract) {
+        // 1. Берем базовую стоимость из тарифа
+        // Предполагаем, что у тарифа есть поле monthlyCost
+        Tariff currentTariff = tariffRepository.findById(contract.getTariff().getId()).orElseThrow(() -> new ResourceNotFoundException("В договоре указан несуществующий тариф."));
+        BigDecimal tariffCost = currentTariff.getInstallationFee();
+
+        // 2. Считаем стоимость всех подключенных услуг
+        BigDecimal servicesCost = contract.getServices().stream()
+                .map(AdditionalService::getCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 3. Складываем и устанавливаем новое значение
+        BigDecimal newMonthlyFee = tariffCost.add(servicesCost);
+        contract.setMonthlyFee(newMonthlyFee);
+
+        // 4. Сохраняем изменения в БД
+        contractRepository.save(contract);
+    }
+
+
     @Override
     @Transactional
     public ContractResponseDto create(ContractCreateDto contractCreateDto) {
+        // todo хехе
         return null;
     }
 
@@ -100,8 +131,11 @@ public class ContractServiceImpl implements ContractService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Услуга не найдена в этом договоре"));
 
-        // 3. Удалить услугу из коллекции.
+        // 3. Удалить услугу из коллекции
         contract.getServices().remove(serviceToRemove);
+
+        // 4. Обновить сумму платежа в договоре
+        recalculateAndSetMonthlyFee(contract);
 
          contractRepository.save(contract); // для читаемости
     }
@@ -133,7 +167,80 @@ public class ContractServiceImpl implements ContractService {
         // 5. Добавить услугу в коллекцию.
         contract.getServices().add(serviceToAdd);
 
-         contractRepository.save(contract);
+        // 6. Обновить сумму платежа в договоре
+        recalculateAndSetMonthlyFee(contract);
+
+        contractRepository.save(contract);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChangeTariffPreviewDto getTariffChangePreview(Long userId, Long contractId, Long newTariffId) {
+        // 1. Найти договор и проверить права
+        Contract contract = contractRepository.findByIdAndSubscriberId(contractId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден или не принадлежит вам"));
+
+        // 2. Найти новый тариф
+        Tariff newTariff = tariffRepository.findById(newTariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Новый тариф не найден"));
+
+        // 3. Получить множество ID услуг, доступных в НОВОМ тарифе
+        Set<Long> availableInNewTariffIds = newTariff.getAvailableServices().stream()
+                .map(AdditionalService::getServiceId)
+                .collect(Collectors.toSet());
+
+        // 4. Найти услуги, которые ПОДКЛЮЧЕНЫ сейчас, но НЕДОСТУПНЫ в новом тарифе
+        List<AdditionalService> servicesToDisconnect = contract.getServices().stream()
+                .filter(connectedService -> !availableInNewTariffIds.contains(connectedService.getServiceId()))
+                .collect(Collectors.toList());
+
+        // 5. Посчитать новую стоимость (опционально, но полезно)
+        recalculateAndSetMonthlyFee(contract);
+        var newMonthlyFee = contract.getMonthlyFee();
+
+        ChangeTariffPreviewDto previewDto = new ChangeTariffPreviewDto();
+        previewDto.setServicesToDisconnect(AdditionalServiceMapper.toDtoList(servicesToDisconnect));
+        previewDto.setNewMonthlyFee(newMonthlyFee);
+
+        return previewDto;    }
+
+    @Override
+    @Transactional
+    public ContractWithServicesDto changeTariff(Long userId, Long contractId, Long newTariffId) {
+        Contract contract = contractRepository.findContractByIdWithServices(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Контракт не найден."));
+
+        log.info("Контракт с ID {} действительно есть, сейчас будут проверки", contractId);
+
+
+        if (!contract.getSubscriber().getId().equals(userId)) {
+            throw new AccessDeniedException("Вы не можете изменять чужой договор");
+        }
+
+        if (contract.getTariff().getId().equals(newTariffId)) {
+            throw new IllegalArgumentException("Вы уже используете этот тариф.");
+        }
+
+        log.info("Изменяю тариф на {}", newTariffId);
+
+        Tariff newTariff = tariffRepository.findByIdWithAvailableServices(newTariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Новый тариф не найден."));
+
+        Set<Long> availableInNewTariffIds = newTariff.getAvailableServices().stream()
+                .map(AdditionalService::getServiceId)
+                .collect(Collectors.toSet());
+
+        // Фильтр текущих услуг в договоре
+        List<AdditionalService> remainingServices = contract.getServices().stream()
+                .filter(connectedService -> availableInNewTariffIds.contains(connectedService.getServiceId()))
+                .collect(Collectors.toList());
+
+        contract.setTariff(newTariff);
+        contract.setServices(remainingServices);
+
+        recalculateAndSetMonthlyFee(contract);
+
+        return toContractWithServicesDto(contract);
     }
 
     @Override
@@ -141,7 +248,7 @@ public class ContractServiceImpl implements ContractService {
     public List<ContractWithServicesDto> getContractsWithServicesForUser(Long userId) {
         List<Contract> contracts = contractRepository.findAllBySubscriberIdWithServices(userId);
 
-        // Маппим результат в наши DTO
+        // Маппим результат в DTO
         return contracts.stream()
                 .map(this::toContractWithServicesDto)
                 .collect(Collectors.toList());
@@ -150,10 +257,10 @@ public class ContractServiceImpl implements ContractService {
     private ContractWithServicesDto toContractWithServicesDto(Contract contract) {
         ContractWithServicesDto dto = new ContractWithServicesDto();
 
-        var tariffId = contract.getTariffId();
+        var tariffId = contract.getTariff().getId();
         dto.setId(contract.getId());
         dto.setContractNumber(contract.getContractNumber());
-        dto.setTariffId(contract.getTariffId());
+        dto.setTariffId(contract.getTariff().getId());
         dto.setTariffName(tariffRepository.
                 findById(tariffId).orElseThrow(() -> new ResourceNotFoundException("Тариф с ID" + tariffId +" Не найден."))
                 .getName()
@@ -177,7 +284,7 @@ public class ContractServiceImpl implements ContractService {
 
         dto.setSubscriberId(contract.getSubscriber().getId());
 
-        dto.setTariffId(contract.getTariffId());
+        dto.setTariffId(contract.getTariff().getId());
         dto.setSigningDate(contract.getSigningDate());
         dto.setServiceStartDate(contract.getServiceStartDate());
         dto.setMonthlyFee(contract.getMonthlyFee());
@@ -188,7 +295,7 @@ public class ContractServiceImpl implements ContractService {
     private Contract toEntity(ContractCreateDto createDto) {
         Contract contract = new Contract();
 
-        // Получаем "ссылки" на сущности, не загружая их полностью из БД.
+        // "ссылки" сущностей
         Subscriber subscriberReference = (Subscriber) userRepository.getReferenceById(createDto.getSubscriberId());
         Tariff tariffReference = tariffRepository.getReferenceById(createDto.getTariffId());
 
@@ -200,7 +307,7 @@ public class ContractServiceImpl implements ContractService {
 
         // Использование "ссылки" вместо полноценного объекта
         contract.setSubscriber(subscriberReference);
-        contract.setTariffId(tariffReference.getId());
+        contract.getTariff().setId(tariffReference.getId());
 
         return contract;
     }

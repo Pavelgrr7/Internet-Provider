@@ -44,8 +44,6 @@ public class UserServiceImpl implements UserService {
             String hashedPassword = passwordEncoder.encode(createDto.getRawPassword());
             subscriber.setPasswordHash(hashedPassword);
 
-            subscriber.setRole("ROLE_USER"); // todo сделать по-человечески
-
             Subscriber savedSubscriber = userRepository.save(subscriber);
 
             return toSubscriberDto(savedSubscriber);

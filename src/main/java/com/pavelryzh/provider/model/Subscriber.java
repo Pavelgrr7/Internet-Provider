@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true) // Важно для Lombok при наследовании
 @Entity
-@DiscriminatorValue("SUBSCRIBER") // Указываем, какое значение будет в колонке user_type для этой сущности
+@DiscriminatorValue("ROLE_USER")
 public class Subscriber extends User {
 
     // Уникальные поля для абонента

@@ -65,6 +65,7 @@ public class TariffServiceImpl implements TariffService {
      */
 
     @Override
+    @Transactional(readOnly = true)
     public TariffResponseDto getById(Long id) {
         // --- Взаимодействие с репозиторием ---
         // искл, если сущность не найдена.
@@ -76,6 +77,7 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TariffResponseDto> getAll() {
 
         List<Tariff> tariffs = tariffRepository.findAll();
@@ -123,6 +125,7 @@ public class TariffServiceImpl implements TariffService {
      */
 
     @Override
+    @Transactional
     public void remove(Long id) {
         tariffRepository.deleteById(id);
     }
@@ -133,7 +136,7 @@ public class TariffServiceImpl implements TariffService {
         // 1. ВСЕ услуги, доступные для данного тарифа
 
         var tariffId = contractRepository.findById(contractId).orElseThrow(() -> new ResourceNotFoundException("Контракт с ID " + contractId + " не найден."))
-                .getTariffId();
+                .getTariff().getId();
 
         List<AdditionalService> allServicesForTariff = tariffRepository.findByIdWithAvailableServices(tariffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."))
@@ -156,6 +159,7 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TariffSelectionDto> findActiveTariffs(Integer year) {
         if (year == null) {
             return tariffRepository.findAll().stream()
@@ -185,6 +189,15 @@ public class TariffServiceImpl implements TariffService {
                 .boxed() // 3. Превращаем примитивный IntStream в Stream<Integer>
                 .sorted((y1, y2) -> y2.compareTo(y1)) // 4. Сортируем в обратном порядке (от нового к старому)
                 .collect(Collectors.toList()); // 5. Собираем результат в список
+    }
+
+    @Override
+    @Transactional
+    public List<TariffSelectionDto> findTariffsForSelection() {
+        return tariffRepository.findAll()
+                .stream()
+                .map(this::toSelectionDto)
+                .toList();
     }
 
     @Override

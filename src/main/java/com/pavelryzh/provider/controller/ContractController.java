@@ -3,6 +3,9 @@ package com.pavelryzh.provider.controller;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
+import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
+import com.pavelryzh.provider.dto.tariff.ChangeTariffRequestDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.service.ContractService;
@@ -94,4 +97,30 @@ public class ContractController {
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @GetMapping("/{contractId}/change-tariff-preview")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ChangeTariffPreviewDto> getTariffChangePreview(
+            Authentication authentication,
+            @PathVariable Long contractId,
+            @RequestParam Long newTariffId) {
+
+        User currentUser = (User) authentication.getPrincipal();
+        ChangeTariffPreviewDto preview = contractService.getTariffChangePreview(
+                currentUser.getId(), contractId, newTariffId
+        );
+        return ResponseEntity.ok(preview);
+    }
+
+    @PatchMapping("/{contractId}/tariff")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ContractWithServicesDto> changeTariff( Authentication authentication,
+            @PathVariable Long contractId, @RequestBody ChangeTariffRequestDto request) {
+        log.info("Получен tariffId {} ", request.getTariffId());
+        var currentUser = (User) authentication.getPrincipal();
+        ContractWithServicesDto contract = contractService.changeTariff(currentUser.getId(), contractId, request.getTariffId());
+        log.info("Tariff changed, new contract: {}", contract);
+        return ResponseEntity.ok(contract);
+    }
+
 }

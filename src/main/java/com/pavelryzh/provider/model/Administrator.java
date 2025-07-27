@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@DiscriminatorValue("ADMIN")
+@DiscriminatorValue("ROLE_ADMIN")
 public class Administrator extends User {
 
     @Override

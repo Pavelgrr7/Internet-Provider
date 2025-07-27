@@ -22,7 +22,9 @@ public class Contract {
     private String contractNumber;
 
     @NotNull
-    private Long tariffId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tariff_id", nullable = false)
+    private Tariff tariff;
 
     @NotNull
     private String serviceAddress;

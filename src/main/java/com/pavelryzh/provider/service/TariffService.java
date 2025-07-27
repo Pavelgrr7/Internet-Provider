@@ -22,4 +22,6 @@ public interface TariffService {
     List<TariffSelectionDto> findActiveTariffs(Integer year);
 
     List<Integer> findActiveYearsForTariff(Long tariffId);
+
+    List<TariffSelectionDto> findTariffsForSelection();
 }

@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Все наследники хранятся в ОДНОЙ таблице
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING) // Добавляем колонку-различитель
+@DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
 public abstract class User implements UserDetails {
 
     @Id
@@ -33,8 +33,10 @@ public abstract class User implements UserDetails {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false, insertable=false, updatable=false) // insertable/updatable = false, т.к. значение будет задано дискриминатором
-    private String role;
+//    @Column(nullable = false, insertable=false, updatable=false) // insertable/updatable = false, т.к. значение будет задано дискриминатором
+//    private String role;
+
+    public abstract String getRole();
 
     @Email
     private String email;
@@ -42,7 +44,7 @@ public abstract class User implements UserDetails {
 
         @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.role));
+        return List.of(new SimpleGrantedAuthority(getRole()));
     }
 
     @Override
