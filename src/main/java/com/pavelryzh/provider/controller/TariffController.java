@@ -49,9 +49,7 @@ public class TariffController {
     @GetMapping("/available-for-change")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TariffSelectionDto>> getTariffsAvailableForChange() {
-        // Здесь мы вызываем специальный метод сервиса, который возвращает
-        // легковесные DTO, а не полные TariffResponseDto.
-        // Это эффективнее для выпадающего списка.
+
         List<TariffSelectionDto> tariffs = tariffService.findTariffsForSelection();
         return ResponseEntity.ok(tariffs);
     }

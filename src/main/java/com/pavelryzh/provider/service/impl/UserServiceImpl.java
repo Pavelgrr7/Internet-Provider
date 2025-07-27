@@ -1,7 +1,11 @@
 package com.pavelryzh.provider.service.impl;
 
+import com.pavelryzh.provider.dto.contract.ContractResponseDto;
+import com.pavelryzh.provider.dto.contract.ContractSummaryDto;
+import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.admin.AdminResponseDto;
+import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberCreateDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
@@ -14,6 +18,7 @@ import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.repository.UserRepository;
 import com.pavelryzh.provider.service.ContractService;
 import com.pavelryzh.provider.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -91,6 +97,66 @@ public class UserServiceImpl implements UserService {
         } else throw new AuthException("Неверный пароль.");
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AdminSubscriberDetailsDto getSubscriberDetailsById(Long id) {
+
+        return toSubscriberWithDetailsDto((Subscriber) userRepository.findById(id).orElseThrow());
+    }
+
+    @Override
+    @Transactional
+    public void updateFullName(Long id, String value) {
+            String[] valueByWords = value.split(" ");
+        Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
+        log.info("Найден пользователь {}", selectedSubscriber.toString());
+        if (!selectedSubscriber.getLastName().equals(valueByWords[0])) {
+            selectedSubscriber.setLastName(valueByWords[0]);
+        }
+
+        if (!selectedSubscriber.getFirstName().equals(valueByWords[1])) {
+            selectedSubscriber.setFirstName(valueByWords[1]);
+        }
+
+        if (!selectedSubscriber.getEmail().equals(valueByWords[2])) {
+            selectedSubscriber.setMiddleName(valueByWords[2]);
+        }
+
+        userRepository.save(selectedSubscriber);
+    }
+
+    @Override
+    public void updateEmail(Long id, String value) {
+
+        Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
+
+        selectedSubscriber.setEmail(value);
+        userRepository.save(selectedSubscriber);
+    }
+
+    @Override
+    public void updatePhoneNumber(Long id, String value) {
+        Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
+
+        selectedSubscriber.setPhoneNumber(value);
+        userRepository.save(selectedSubscriber);
+    }
+
+    @Override
+    public void updatePassport(Long id, String value) {
+        Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
+
+        selectedSubscriber.setPassportSeriesNumber(value);
+        userRepository.save(selectedSubscriber);
+    }
+
+    @Override
+    public void updateLogin(Long id, String value) {
+        Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
+
+        selectedSubscriber.setLogin(value);
+        userRepository.save(selectedSubscriber);
+    }
 
     private SubscriberResponseDto toSubscriberDto(Subscriber savedSubscriber) {
             SubscriberResponseDto responseDto = new SubscriberResponseDto();
@@ -146,4 +212,17 @@ public class UserServiceImpl implements UserService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    public AdminSubscriberDetailsDto toSubscriberWithDetailsDto(Subscriber subscriber) {
+        AdminSubscriberDetailsDto dto = new AdminSubscriberDetailsDto();
+        dto.setId(subscriber.getId());
+        dto.setPassportSeriesNumber(subscriber.getPassportSeriesNumber());
+        dto.setLogin(subscriber.getLogin());
+        dto.setEmail(subscriber.getEmail());
+        dto.setFullName(subscriber.getLastName() + " " + subscriber.getFirstName() + " " + subscriber.getMiddleName());
+        dto.setPhoneNumber(subscriber.getPhoneNumber());
+        dto.setContracts(contractService.getContractsWithServicesForUser(subscriber.getId()));
+        return dto;
+    }
+
 }

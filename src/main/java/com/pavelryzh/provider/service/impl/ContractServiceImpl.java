@@ -66,11 +66,27 @@ public class ContractServiceImpl implements ContractService {
     }
 
 
-    @Override
     @Transactional
-    public ContractResponseDto create(ContractCreateDto contractCreateDto) {
-        // todo хехе
-        return null;
+    public ContractResponseDto create(ContractCreateDto createDto) {
+        // 1. Находим связанные сущности
+        Subscriber subscriber = (Subscriber) userRepository.findById(createDto.getSubscriberId()).orElseThrow();
+        Tariff tariff = tariffRepository.findById(createDto.getTariffId()).orElseThrow();
+
+        // 2. Создаем новый контракт
+        Contract contract = new Contract();
+        contract.setSubscriber(subscriber);
+        contract.setTariff(tariff);
+        contract.setContractNumber(createDto.getContractNumber());
+        contract.setServiceAddress(createDto.getServiceAddress());
+        contract.setSigningDate(createDto.getSigningDate());
+        contract.setServiceStartDate(createDto.getServiceStartDate());
+
+        // 3. Рассчитываем начальную monthlyFee (стоимость тарифа)
+        contract.setMonthlyFee(tariff.getInstallationFee());
+
+        // 4. Сохраняем и возвращаем
+        Contract savedContract = contractRepository.save(contract);
+        return toResponseDto(savedContract);
     }
 
     @Override
@@ -108,7 +124,6 @@ public class ContractServiceImpl implements ContractService {
             );
             contractsInfoMap.put(subscriberId, infoList);
         }
-
         return contractsInfoMap;
     }
 
@@ -265,6 +280,7 @@ public class ContractServiceImpl implements ContractService {
                 findById(tariffId).orElseThrow(() -> new ResourceNotFoundException("Тариф с ID" + tariffId +" Не найден."))
                 .getName()
         );
+        dto.setTariffMonthlyFee(contract.getTariff().getInstallationFee());
         dto.setServiceAddress(contract.getServiceAddress());
         dto.setSigningDate(contract.getSigningDate());
         dto.setServiceStartDate(contract.getServiceStartDate());

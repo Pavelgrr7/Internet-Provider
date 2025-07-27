@@ -1,5 +1,6 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
@@ -31,6 +32,14 @@ public class ContractController {
     public ContractController(ContractService contractService, UserService userService) {
         this.userService = userService;
         this.contractService = contractService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ContractResponseDto> createContract(@Valid @RequestBody ContractCreateDto createDto) {
+        ContractResponseDto newContract = contractService.create(createDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newContract);
     }
 
     @GetMapping

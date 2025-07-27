@@ -17,6 +17,7 @@ public class ContractWithServicesDto {
     private LocalDate signingDate;
     private LocalDate serviceStartDate;
     private BigDecimal monthlyFee;
+    private BigDecimal tariffMonthlyFee;
     private List<AdditionalServiceResponseDto> services;
     private BigDecimal totalFee;
 }

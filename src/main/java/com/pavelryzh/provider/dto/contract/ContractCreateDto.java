@@ -11,12 +11,14 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 public class ContractCreateDto {
-    private Long id;
 
+    @NotNull
     private String contractNumber;
 
+    @NotNull
     private Long subscriberId;
 
+    @NotNull
     private Long tariffId;
 
     @NotNull(message = "Адрес предоставления услуги обязателен")

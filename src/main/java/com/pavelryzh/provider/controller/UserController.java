@@ -1,5 +1,6 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.UpdateFieldRequestDto;
 import com.pavelryzh.provider.dto.user.EmailChangeDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
@@ -7,7 +8,10 @@ import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.service.UserService;
+import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -73,4 +77,49 @@ public class UserController {
         log.info("sent subscribers: {}", subscribers);
         return ResponseEntity.ok(subscribers);
     }
+
+    @GetMapping("/subscribers/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSubscriberDetailsDto> getSubscriberDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getSubscriberDetailsById(id));
+    }
+
+    @PatchMapping("/subscribers/{id}/fullname")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updateFullName(@PathVariable Long id, @Valid @RequestBody UpdateFieldRequestDto request) {
+        log.info("request to change name: {}", request);
+        userService.updateFullName(id, request.getValue());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/subscribers/{id}/email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updateEmail(@PathVariable Long id, @Valid @RequestBody UpdateFieldRequestDto request) {
+        userService.updateEmail(id, request.getValue());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/subscribers/{id}/login")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updateLogin(@PathVariable Long id, @Valid @RequestBody UpdateFieldRequestDto request) {
+        userService.updateLogin(id, request.getValue());
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @PatchMapping("/subscribers/{id}/passport")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updatePassport(@PathVariable Long id, @Valid @RequestBody UpdateFieldRequestDto request) {
+        userService.updatePassport(id, request.getValue());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/subscribers/{id}/phone")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> updatePhoneNumber(@PathVariable Long id, @Valid @RequestBody UpdateFieldRequestDto request) {
+        userService.updatePhoneNumber(id, request.getValue());
+        return ResponseEntity.noContent().build();
+    }
+
 }
+
