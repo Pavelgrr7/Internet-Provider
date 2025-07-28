@@ -24,6 +24,9 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     List<Contract> findActiveContractsByTariffAndYear(@Param("tariffId") Long tariffId, @Param("year") Integer year);
 
     Optional<Contract> findByIdAndSubscriberId(Long contractId, Long userId);
+
     @Query("SELECT c FROM Contract c LEFT JOIN FETCH c.services WHERE c.id = :contractId")
     Optional<Contract> findContractByIdWithServices(@Param("contractId") Long contractId);
+
+    boolean existsByTariffId(Long id);
 }

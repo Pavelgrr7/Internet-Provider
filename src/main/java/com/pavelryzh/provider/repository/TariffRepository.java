@@ -22,4 +22,5 @@ public interface TariffRepository extends JpaRepository<Tariff, Long>{
 
     @Query("SELECT t FROM Tariff t where YEAR(t.startDate) <= :year")
     List<Tariff> findAllActiveByYear(Integer year);
+
 }

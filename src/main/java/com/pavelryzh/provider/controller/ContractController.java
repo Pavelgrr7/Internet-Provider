@@ -125,11 +125,33 @@ public class ContractController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ContractWithServicesDto> changeTariff( Authentication authentication,
             @PathVariable Long contractId, @RequestBody ChangeTariffRequestDto request) {
-        log.info("Получен tariffId {} ", request.getTariffId());
+        log.info("TariffId {} ", request.getTariffId());
         var currentUser = (User) authentication.getPrincipal();
         ContractWithServicesDto contract = contractService.changeTariff(currentUser.getId(), contractId, request.getTariffId());
         log.info("Tariff changed, new contract: {}", contract);
         return ResponseEntity.ok(contract);
     }
+
+    @PatchMapping("/{contractId}/address")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changeAddress( Authentication authentication,
+                                               @PathVariable Long contractId, @RequestBody String newAddress) {
+        log.info("Address {} ", newAddress);
+        var currentUser = (User) authentication.getPrincipal();
+        contractService.changeAddress(currentUser.getId(), contractId, newAddress);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{contractId}/serviceStartDate")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changeServiceStartDate( Authentication authentication,
+                                               @PathVariable Long contractId, @RequestBody String newStartDate) {
+        log.info("StartDate {} ", newStartDate);
+        var currentUser = (User) authentication.getPrincipal();
+        contractService.changeStartDate(currentUser.getId(), contractId, newStartDate);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 }

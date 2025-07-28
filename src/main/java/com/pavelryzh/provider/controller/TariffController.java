@@ -1,5 +1,6 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
 import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
@@ -8,6 +9,7 @@ import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.service.TariffService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -97,6 +99,20 @@ public class TariffController {
     @GetMapping("/{tariffId}/active-years")
     public ResponseEntity<List<Integer>> getActiveYears(@PathVariable Long tariffId) {
         return ResponseEntity.ok(tariffService.findActiveYearsForTariff(tariffId));
+    }
+
+    @PostMapping("/api/tariffs/{tariffId}/services")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> addServiceToTariff(@PathVariable Long tariffId, @RequestBody AddServiceRequestDto request) {
+        tariffService.addServiceToTariff(tariffId, request.getServiceId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/api/tariffs/{tariffId}/services/{serviceId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> removeServiceFromTariff(@PathVariable Long tariffId, @PathVariable Long serviceId) {
+        tariffService.removeServiceFromTariff(tariffId, serviceId);
+        return ResponseEntity.noContent().build();
     }
 
 }

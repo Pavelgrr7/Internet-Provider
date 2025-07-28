@@ -25,4 +25,8 @@ public interface ContractService {
     ChangeTariffPreviewDto getTariffChangePreview(Long id, Long contractId, Long newTariffId);
 
     ContractWithServicesDto changeTariff(Long userId, Long contractId, Long tariffId);
+
+    void changeAddress(Long id, Long contractId, String newAddress);
+
+    void changeStartDate(Long id, Long contractId, String newStartDate);
 }

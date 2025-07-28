@@ -7,7 +7,9 @@ import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface TariffService {
@@ -24,4 +26,8 @@ public interface TariffService {
     List<Integer> findActiveYearsForTariff(Long tariffId);
 
     List<TariffSelectionDto> findTariffsForSelection();
+
+    void addServiceToTariff(Long tariffId, @NotNull Long serviceId);
+
+    void removeServiceFromTariff(Long tariffId, Long serviceId);
 }

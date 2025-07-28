@@ -11,14 +11,17 @@ import com.pavelryzh.provider.model.AdditionalService;
 import com.pavelryzh.provider.model.Contract;
 import com.pavelryzh.provider.model.Tariff;
 import com.pavelryzh.provider.repository.ContractRepository;
+import com.pavelryzh.provider.repository.ServiceRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.service.TariffService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,9 +31,12 @@ public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
     private final ContractRepository contractRepository;
-    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository) {
+    private final ServiceRepository serviceRepository;
+
+    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository, ServiceRepository serviceRepository) {
         this.tariffRepository = tariffRepository;
         this.contractRepository = contractRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     /**
@@ -127,6 +133,14 @@ public class TariffServiceImpl implements TariffService {
     @Override
     @Transactional
     public void remove(Long id) {
+        if (contractRepository.existsByTariffId(id)) {
+
+            throw new DataIntegrityViolationException(
+                    "Невозможно удалить тариф, так как на него ссылаются существующие договоры. " +
+                            "Сначала переведите абонентов на другие тарифы."
+            );
+        }
+
         tariffRepository.deleteById(id);
     }
 
@@ -201,6 +215,35 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    public void addServiceToTariff(Long tariffId, Long serviceId) {
+
+        Tariff selectedTariff = tariffRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф не найден."));
+
+        AdditionalService newService = serviceRepository.findByServiceId(serviceId).orElseThrow(() -> new ResourceNotFoundException("Услуга не найдена."));
+        List<AdditionalService> newServices = selectedTariff.getAvailableServices();
+        newServices.add(newService);
+
+        selectedTariff.setAvailableServices(newServices);
+    }
+
+
+    @Override
+    public void removeServiceFromTariff(Long tariffId, Long serviceId) {
+
+        Tariff selectedTariff = tariffRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф не найден."));
+
+        var newServices = selectedTariff.getAvailableServices().stream()
+                .filter(service ->
+                        !Objects.equals(service.getServiceId(), serviceId)
+                )
+                .toList();
+
+        selectedTariff.setAvailableServices(newServices);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId) {
         // 1. Находим тариф вместе с его услугами ОДНИМ запросом
@@ -220,6 +263,9 @@ public class TariffServiceImpl implements TariffService {
         dto.setInstallationFee(tariff.getInstallationFee());
         dto.setIpAddressType(tariff.getIpAddressType());
         dto.setStartDate(tariff.getStartDate());
+        dto.setAvailableServices(
+                AdditionalServiceMapper.toDtoList(tariff.getAvailableServices())
+        );
 
         return dto;
     }

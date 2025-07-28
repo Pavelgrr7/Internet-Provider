@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -256,6 +258,23 @@ public class ContractServiceImpl implements ContractService {
         recalculateAndSetMonthlyFee(contract);
 
         return toContractWithServicesDto(contract);
+    }
+
+    @Override
+    @Transactional
+    public void changeAddress(Long id, Long contractId, String newAddress) {
+        contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Контракт не найден."))
+                .setServiceAddress(newAddress);
+    }
+
+    @Override
+    @Transactional
+    public void changeStartDate(Long id, Long contractId, String newStartDate) {
+        LocalDate convertedDate = LocalDate.parse(newStartDate);
+            contractRepository.findById(contractId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Контракт не найден."))
+                    .setServiceStartDate(convertedDate);
     }
 
     @Override

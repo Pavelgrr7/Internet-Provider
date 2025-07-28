@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ServiceRepository extends JpaRepository<AdditionalService, Long> {
 
-    AdditionalService findById(long id);
+    Optional<AdditionalService> findByServiceId(long id);
+    void deleteByServiceId(long id);
 }
