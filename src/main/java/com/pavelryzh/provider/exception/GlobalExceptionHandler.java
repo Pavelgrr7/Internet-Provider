@@ -1,5 +1,6 @@
 package com.pavelryzh.provider.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -32,5 +33,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(problemDetail, HttpStatus.BAD_REQUEST);
     }
 
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ProblemDetail> handleAuthException(AuthException ex) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+
+        problemDetail.setTitle("Ошибка аутентификации. Проверьте введённые данные");
+
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return new ResponseEntity<>(problemDetail, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Запрос на совершение данного действия нарушает целостность данных.");
+        problemDetail.setProperty("timestamp", Instant.now());
+        return new ResponseEntity<>(problemDetail, HttpStatus.CONFLICT);
+    }
     //todo остальные исключения
 }

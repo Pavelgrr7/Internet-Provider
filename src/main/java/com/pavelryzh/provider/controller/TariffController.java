@@ -1,10 +1,15 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.service.TariffService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/tariffs")
 public class TariffController {
@@ -43,6 +48,13 @@ public class TariffController {
 
     }
 
+    @GetMapping("/available-for-change")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TariffSelectionDto>> getTariffsAvailableForChange() {
+
+        List<TariffSelectionDto> tariffs = tariffService.findTariffsForSelection();
+        return ResponseEntity.ok(tariffs);
+    }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -69,4 +81,38 @@ public class TariffController {
         tariffService.remove(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/available-for-contract/{contractId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AdditionalServiceResponseDto>> getAvailableServicesForContract(@PathVariable Long contractId) {
+
+        log.info("Отправка доступных услуг для контракта {}: {}", contractId, tariffService.getAvailableServicesForContract(contractId));
+
+        return ResponseEntity.ok(tariffService.getAvailableServicesForContract(contractId));
+    }
+
+    @GetMapping("/active-in-year")
+    public ResponseEntity<List<TariffSelectionDto>> getActiveTariffs(@RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(tariffService.findActiveTariffs(year));
+    }
+
+    @GetMapping("/{tariffId}/active-years")
+    public ResponseEntity<List<Integer>> getActiveYears(@PathVariable Long tariffId) {
+        return ResponseEntity.ok(tariffService.findActiveYearsForTariff(tariffId));
+    }
+
+    @PostMapping("/api/tariffs/{tariffId}/services")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> addServiceToTariff(@PathVariable Long tariffId, @RequestBody AddServiceRequestDto request) {
+        tariffService.addServiceToTariff(tariffId, request.getServiceId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/api/tariffs/{tariffId}/services/{serviceId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> removeServiceFromTariff(@PathVariable Long tariffId, @PathVariable Long serviceId) {
+        tariffService.removeServiceFromTariff(tariffId, serviceId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

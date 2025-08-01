@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -39,6 +41,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 1. Наличие и формат заголовка
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+
             filterChain.doFilter(request, response);
             return;
         }
@@ -49,12 +52,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 3. Извлечение логина из токена
         userLogin = jwtService.extractUsername(jwt);
 
+        logger.info("user " + userLogin);
         // 4. Пользователь существует и еще не аутентифицирован в текущем контексте
         if (userLogin != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userLogin);
 
             // 5. Валидность токена
             if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                logger.info("user " + userLogin + ", token is valid");
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
@@ -64,6 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
                 // 6. Сохраняем аутентификацию в контексте безопасности
+                logger.info(String.format("Setting authentication for user: %s, with authorities: %s", userLogin, userDetails.getAuthorities()));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

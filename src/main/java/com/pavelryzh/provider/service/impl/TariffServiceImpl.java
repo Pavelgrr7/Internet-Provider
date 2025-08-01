@@ -1,25 +1,42 @@
 package com.pavelryzh.provider.service.impl;
 
+import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import com.pavelryzh.provider.dto.tariff.TariffCreateDto;
 import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
+import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import com.pavelryzh.provider.exception.ResourceNotFoundException;
+import com.pavelryzh.provider.model.AdditionalService;
+import com.pavelryzh.provider.model.Contract;
 import com.pavelryzh.provider.model.Tariff;
+import com.pavelryzh.provider.repository.ContractRepository;
+import com.pavelryzh.provider.repository.ServiceRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.service.TariffService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
+    private final ContractRepository contractRepository;
+    private final ServiceRepository serviceRepository;
 
-    public TariffServiceImpl(TariffRepository tariffRepository) {
+    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository, ServiceRepository serviceRepository) {
         this.tariffRepository = tariffRepository;
+        this.contractRepository = contractRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     /**
@@ -54,6 +71,7 @@ public class TariffServiceImpl implements TariffService {
      */
 
     @Override
+    @Transactional(readOnly = true)
     public TariffResponseDto getById(Long id) {
         // --- Взаимодействие с репозиторием ---
         // искл, если сущность не найдена.
@@ -65,6 +83,7 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TariffResponseDto> getAll() {
 
         List<Tariff> tariffs = tariffRepository.findAll();
@@ -112,8 +131,127 @@ public class TariffServiceImpl implements TariffService {
      */
 
     @Override
+    @Transactional
     public void remove(Long id) {
+        if (contractRepository.existsByTariffId(id)) {
+
+            throw new DataIntegrityViolationException(
+                    "Невозможно удалить тариф, так как на него ссылаются существующие договоры. " +
+                            "Сначала переведите абонентов на другие тарифы."
+            );
+        }
+
         tariffRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdditionalServiceResponseDto> getAvailableServicesForContract(Long contractId) {
+        // 1. ВСЕ услуги, доступные для данного тарифа
+
+        var tariffId = contractRepository.findById(contractId).orElseThrow(() -> new ResourceNotFoundException("Контракт с ID " + contractId + " не найден."))
+                .getTariff().getId();
+
+        List<AdditionalService> allServicesForTariff = tariffRepository.findByIdWithAvailableServices(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."))
+                .getAvailableServices();
+
+        // 2. Получаем ВСЕ услуги, УЖЕ ПОДКЛЮЧЕННЫЕ к данному договору
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден"));
+        Set<Long> connectedServiceIds = contract.getServices().stream()
+                .map(AdditionalService::getServiceId)
+                .collect(Collectors.toSet());
+
+        // 3. Фильтруем и возвращаем только те, которые еще не подключены
+        List<AdditionalService> availableServices = allServicesForTariff.stream()
+                .filter(service -> !connectedServiceIds.contains(service.getServiceId()))
+                .collect(Collectors.toList());
+
+        // 4. Маппим результат в DTO
+        return AdditionalServiceMapper.toDtoList(availableServices);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TariffSelectionDto> findActiveTariffs(Integer year) {
+        if (year == null) {
+            return tariffRepository.findAll().stream()
+                    .map(this::toSelectionDto)
+                    .toList();
+        } else {
+            return tariffRepository.findAllActiveByYear(year)
+                    .stream()
+                    .map(this::toSelectionDto)
+                    .toList();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true) // Добавляем транзакцию, т.к. есть обращение к БД
+    public List<Integer> findActiveYearsForTariff(Long tariffId) {
+        // 1. Получаем дату начала действия тарифа
+        LocalDate startDate = tariffRepository.findById(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."))
+                .getStartDate();
+
+        int startYear = startDate.getYear();
+        int currentYear = Year.now().getValue(); // Более правильный способ получить текущий год
+
+        // 2. Генерируем поток целых чисел от startYear до currentYear (включительно)
+        return IntStream.rangeClosed(startYear, currentYear)
+                .boxed() // 3. Превращаем примитивный IntStream в Stream<Integer>
+                .sorted((y1, y2) -> y2.compareTo(y1)) // 4. Сортируем в обратном порядке (от нового к старому)
+                .collect(Collectors.toList()); // 5. Собираем результат в список
+    }
+
+    @Override
+    @Transactional
+    public List<TariffSelectionDto> findTariffsForSelection() {
+        return tariffRepository.findAll()
+                .stream()
+                .map(this::toSelectionDto)
+                .toList();
+    }
+
+    @Override
+    public void addServiceToTariff(Long tariffId, Long serviceId) {
+
+        Tariff selectedTariff = tariffRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф не найден."));
+
+        AdditionalService newService = serviceRepository.findByServiceId(serviceId).orElseThrow(() -> new ResourceNotFoundException("Услуга не найдена."));
+        List<AdditionalService> newServices = selectedTariff.getAvailableServices();
+        newServices.add(newService);
+
+        selectedTariff.setAvailableServices(newServices);
+    }
+
+
+    @Override
+    public void removeServiceFromTariff(Long tariffId, Long serviceId) {
+
+        Tariff selectedTariff = tariffRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф не найден."));
+
+        var newServices = selectedTariff.getAvailableServices().stream()
+                .filter(service ->
+                        !Objects.equals(service.getServiceId(), serviceId)
+                )
+                .toList();
+
+        selectedTariff.setAvailableServices(newServices);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdditionalServiceResponseDto> getAvailableServicesByTariffId(Long tariffId) {
+        // 1. Находим тариф вместе с его услугами ОДНИМ запросом
+        Tariff tariff = tariffRepository.findByIdWithAvailableServices(tariffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Тариф с ID " + tariffId + " не найден."));
+
+        // 2. Просто возвращаем уже загруженный список услуг, предварительно смапив его
+        return AdditionalServiceMapper.toDtoList(tariff.getAvailableServices());
     }
 
     private TariffResponseDto toResponseDto(Tariff tariff) {
@@ -125,6 +263,9 @@ public class TariffServiceImpl implements TariffService {
         dto.setInstallationFee(tariff.getInstallationFee());
         dto.setIpAddressType(tariff.getIpAddressType());
         dto.setStartDate(tariff.getStartDate());
+        dto.setAvailableServices(
+                AdditionalServiceMapper.toDtoList(tariff.getAvailableServices())
+        );
 
         return dto;
     }
@@ -137,5 +278,11 @@ public class TariffServiceImpl implements TariffService {
         tariff.setIpAddressType(createDto.getIpAddressType());
         tariff.setStartDate(createDto.getStartDate());
         return tariff;
+    }
+
+    private TariffSelectionDto toSelectionDto(Tariff tariff) {
+        return new TariffSelectionDto(
+                tariff.getId(),
+                tariff.getName());
     }
 }

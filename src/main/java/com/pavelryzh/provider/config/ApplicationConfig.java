@@ -1,6 +1,6 @@
 package com.pavelryzh.provider.config;
 
-import com.pavelryzh.provider.repository.SubscriberRepository;
+import com.pavelryzh.provider.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,9 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfig {
 
-    private final SubscriberRepository userRepository; // Репозиторий для пользователей
+    private final UserRepository userRepository; // Репозиторий для пользователей
 
-    public ApplicationConfig(SubscriberRepository userRepository) {
+    public ApplicationConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

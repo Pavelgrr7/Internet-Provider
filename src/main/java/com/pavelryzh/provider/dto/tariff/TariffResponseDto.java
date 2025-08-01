@@ -1,10 +1,12 @@
 package com.pavelryzh.provider.dto.tariff;
 
 
+import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TariffResponseDto {
@@ -15,5 +17,5 @@ public class TariffResponseDto {
     private BigDecimal installationFee;
     private String ipAddressType;
     private LocalDate startDate;
-    // todo: "активен ли тариф сейчас",
+    private List<AdditionalServiceResponseDto> availableServices;
 }

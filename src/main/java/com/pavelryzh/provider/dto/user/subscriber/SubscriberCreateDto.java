@@ -1,5 +1,6 @@
-package com.pavelryzh.provider.dto.subscriber;
+package com.pavelryzh.provider.dto.user.subscriber;
 
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -7,8 +8,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class SubscriberResponseDto {
-    private BigDecimal subscriberId;
+public class SubscriberCreateDto {
+    @Id
+    private BigDecimal id;
 
     @NotBlank(message = "Название тарифа не может быть пустым")
     @Size(max = 50, message = "Имя абонента не может превышать 50 символов")
@@ -23,5 +25,11 @@ public class SubscriberResponseDto {
 
     private String login;
 
+    private String password;
+
     private String role;
+
+    public CharSequence getRawPassword() {
+        return password;
+    }
 }
