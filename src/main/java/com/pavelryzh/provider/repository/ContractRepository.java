@@ -1,8 +1,5 @@
 package com.pavelryzh.provider.repository;
 
-import com.pavelryzh.provider.model.Tariff;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.pavelryzh.provider.model.Contract;
 import org.springframework.data.jpa.repository.Query;

@@ -1,9 +1,9 @@
 package com.pavelryzh.provider.service.impl;
 
-import com.pavelryzh.provider.dto.contract.ContractResponseDto;
-import com.pavelryzh.provider.dto.contract.ContractSummaryDto;
-import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
+import com.pavelryzh.provider.dto.CreateFullPackageDto;
+import com.pavelryzh.provider.dto.contract.*;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
+import com.pavelryzh.provider.dto.user.UserCreateDto;
 import com.pavelryzh.provider.dto.user.admin.AdminResponseDto;
 import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
@@ -32,31 +32,31 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-        private final UserRepository userRepository;
-        private final PasswordEncoder passwordEncoder;
-        private final ContractService contractService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ContractService contractService;
 
-        public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ContractService contractService) {
-            this.userRepository = userRepository;
-            this.passwordEncoder = passwordEncoder;
-            this.contractService = contractService;
-        }
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, ContractService contractService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.contractService = contractService;
+    }
 
-        public SubscriberResponseDto createSubscriber(SubscriberCreateDto createDto) {
+    public SubscriberResponseDto createSubscriber(SubscriberCreateDto createDto) {
 
-            Subscriber subscriber = new Subscriber();
-            subscriber.setLogin(createDto.getLogin());
+        Subscriber subscriber = new Subscriber();
+        subscriber.setLogin(createDto.getLogin());
 
-            String hashedPassword = passwordEncoder.encode(createDto.getRawPassword());
-            subscriber.setPasswordHash(hashedPassword);
+        String hashedPassword = passwordEncoder.encode(createDto.getRawPassword());
+        subscriber.setPasswordHash(hashedPassword);
 
-            Subscriber savedSubscriber = userRepository.save(subscriber);
+        Subscriber savedSubscriber = userRepository.save(subscriber);
 
-            return toSubscriberDto(savedSubscriber);
-        }
+        return toSubscriberDto(savedSubscriber);
+    }
 
     @Override
-    @Transactional( /*readOnly = true*/)
+    @Transactional(readOnly = true)
     public SubscriberResponseDto getSubscriberById(Long id) {
         User subscriber = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь с ID " + id + " не найден."));
@@ -68,6 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AdminResponseDto getAdminById(Long id) {
             User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Пользователь с ID " + id + "не найден."));
 
@@ -124,7 +125,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(selectedSubscriber);
     }
-
+    @Transactional
     @Override
     public void updateEmail(Long id, String value) {
 
@@ -133,7 +134,7 @@ public class UserServiceImpl implements UserService {
         selectedSubscriber.setEmail(value);
         userRepository.save(selectedSubscriber);
     }
-
+    @Transactional
     @Override
     public void updatePhoneNumber(Long id, String value) {
         Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
@@ -142,6 +143,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(selectedSubscriber);
     }
 
+    @Transactional
     @Override
     public void updatePassport(Long id, String value) {
         Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
@@ -150,12 +152,57 @@ public class UserServiceImpl implements UserService {
         userRepository.save(selectedSubscriber);
     }
 
+    @Transactional
     @Override
     public void updateLogin(Long id, String value) {
         Subscriber selectedSubscriber = (Subscriber) userRepository.findById(id).orElseThrow();
 
         selectedSubscriber.setLogin(value);
         userRepository.save(selectedSubscriber);
+    }
+
+    @Transactional
+    @Override
+    public AdminSubscriberDetailsDto createSubscriberAndFirstContract(CreateFullPackageDto fullPackage) {
+        UserCreateDto userDto = fullPackage.getSubscriberData();
+        Subscriber newSubscriber = new Subscriber();
+        newSubscriber.setFirstName(userDto.getFirstName());
+        newSubscriber.setMiddleName(userDto.getMiddleName());
+        newSubscriber.setLastName(userDto.getLastName());
+        newSubscriber.setPassportSeriesNumber(userDto.getPassportSeriesNumber());
+        newSubscriber.setPhoneNumber(userDto.getPhoneNumber());
+        newSubscriber.setEmail(userDto.getEmail());
+        newSubscriber.setLogin(userDto.getLogin());
+
+        // Обязательно хэшируем пароль!
+        newSubscriber.setPasswordHash(passwordEncoder.encode(userDto.getPassword()));
+
+        // Роль можно установить по умолчанию
+        Subscriber savedSubscriber = userRepository.save(newSubscriber);
+
+        // 2. Создаем его первый договор
+        ContractCreateDto contractDto = fullPackage.getContractData();
+        var dtoWithSubscriberField = toContractDto(contractDto);
+//        dtoWithSubscriberField.setSer
+        dtoWithSubscriberField.setSubscriberId(savedSubscriber.getId());
+
+        contractService.create(dtoWithSubscriberField);
+
+
+        var dto = getSubscriberDetailsById(savedSubscriber.getId());
+        dto.setFullName(newSubscriber.getFullName());
+        // 3. Возвращаем полные данные о новом абоненте
+        return dto;
+    }
+//todo проверить
+    private ContractCreateDto toContractDto(ContractCreateDto contractDto) {
+        var response = new ContractCreateDto();
+        response.setTariffId(contractDto.getTariffId());
+        response.setServiceAddress(contractDto.getServiceAddress());
+        response.setSigningDate(contractDto.getSigningDate());
+        response.setServiceStartDate(contractDto.getServiceStartDate());
+        response.setServiceIds(contractDto.getServiceIds());
+        return response;
     }
 
     private SubscriberResponseDto toSubscriberDto(Subscriber savedSubscriber) {
@@ -181,7 +228,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<SubscriberListItemDto> getAllSubscribers() {
 
             // получение всех абонентов

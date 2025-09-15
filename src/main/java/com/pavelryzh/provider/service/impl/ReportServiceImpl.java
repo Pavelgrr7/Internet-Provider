@@ -107,10 +107,28 @@ public class ReportServiceImpl implements ReportService {
         return toResponseDto(savedReport);
     }
 
+    @Override
+    public void deleteReportById(ReportId reportId) {
+        reportRepository.deleteById(reportId);
+    }
+
+    @Override
+    @Transactional
+    public ReportResponseDto recalculateReport(ReportId reportId) {
+
+        reportRepository.deleteById(reportId);
+
+        ReportCreateDto dto = new ReportCreateDto();
+        dto.setReportYear(reportId.getReportYear());
+        dto.setTariffId(reportId.getTariffId());
+        return createReport(dto);
+    }
+
     private ReportResponseDto toResponseDto(Report report) {
         ReportResponseDto dto = new ReportResponseDto(
                 report.getId().getReportYear());
         dto.setTariffName(report.getTariff().getName());
+        dto.setTariffId(report.getId().getTariffId());
         dto.setTotalPayments(report.getTotalPayments());
         dto.setSubscriberCount(report.getSubscriberCount());
         dto.setMinDurationDays(report.getMinDurationDays());

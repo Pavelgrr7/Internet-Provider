@@ -1,5 +1,6 @@
 package com.pavelryzh.provider.controller;
 
+import com.pavelryzh.provider.dto.CreateFullPackageDto;
 import com.pavelryzh.provider.dto.UpdateFieldRequestDto;
 import com.pavelryzh.provider.dto.user.EmailChangeDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
@@ -10,9 +11,8 @@ import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.service.UserService;
 import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -44,6 +44,18 @@ public class UserController {
             return ResponseEntity.ok(dto);
 
         } else return ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/create-full")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminSubscriberDetailsDto> createSubscriberAndFirstContract(
+            @Valid @RequestBody CreateFullPackageDto fullPackage) {
+        log.info("new full-package request: {}", fullPackage);
+
+        AdminSubscriberDetailsDto newSubscriber = userService.createSubscriberAndFirstContract(fullPackage);
+
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newSubscriber);
     }
 
     @PatchMapping("/my/password")

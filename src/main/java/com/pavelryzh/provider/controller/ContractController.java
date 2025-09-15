@@ -6,7 +6,6 @@ import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
 import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffRequestDto;
-import com.pavelryzh.provider.dto.tariff.TariffSelectionDto;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.service.ContractService;
@@ -151,7 +150,4 @@ public class ContractController {
         contractService.changeStartDate(currentUser.getId(), contractId, newStartDate);
         return ResponseEntity.noContent().build();
     }
-
-
-
 }

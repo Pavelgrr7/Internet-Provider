@@ -5,15 +5,14 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TariffCreateDto {
 
-    private BigDecimal tariffId;
-
     @NotBlank(message = "Название тарифа не может быть пустым")
     @Size(max = 100, message = "Название тарифа не может превышать 100 символов")
-    private String name; // Упрощенное имя поля
+    private String name;
 
     @NotBlank(message = "Необходимо указать заявленную скорость")
     @Size(max = 50)
@@ -28,6 +27,7 @@ public class TariffCreateDto {
     private String ipAddressType;
 
     @NotNull(message = "Дата начала действия тарифа обязательна")
-//    @FutureOrPresent(message = "Дата начала не может быть в прошлом")
     private LocalDate startDate;
+
+    private List<Long> serviceIds;
 }

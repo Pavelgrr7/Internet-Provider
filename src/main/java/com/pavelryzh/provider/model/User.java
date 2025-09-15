@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @Entity
@@ -32,9 +34,6 @@ public abstract class User implements UserDetails {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
-//    @Column(nullable = false, insertable=false, updatable=false) // insertable/updatable = false, т.к. значение будет задано дискриминатором
-//    private String role;
 
     public abstract String getRole();
 
@@ -75,5 +74,12 @@ public abstract class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Transient
+    public String getFullName() {
+        return Stream.of(lastName, firstName, middleName)
+                .filter(s -> s != null && !s.isEmpty())
+                .collect(Collectors.joining(" "));
     }
 }

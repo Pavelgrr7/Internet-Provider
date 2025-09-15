@@ -101,18 +101,29 @@ public class TariffController {
         return ResponseEntity.ok(tariffService.findActiveYearsForTariff(tariffId));
     }
 
-    @PostMapping("/api/tariffs/{tariffId}/services")
+    @PostMapping("/{tariffId}/services")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> addServiceToTariff(@PathVariable Long tariffId, @RequestBody AddServiceRequestDto request) {
         tariffService.addServiceToTariff(tariffId, request.getServiceId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @DeleteMapping("/api/tariffs/{tariffId}/services/{serviceId}")
+    @DeleteMapping("/{tariffId}/services/{serviceId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeServiceFromTariff(@PathVariable Long tariffId, @PathVariable Long serviceId) {
         tariffService.removeServiceFromTariff(tariffId, serviceId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{tariffId}/available-services")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AdditionalServiceResponseDto>> getAvailableServicesForTariff(@PathVariable Long tariffId) {
+
+        var services = tariffService.getAvailableServicesByTariffId(tariffId);
+
+        log.info("list of services: {}", services);
+        return ResponseEntity.ok(services);
+    }
+
 
 }
