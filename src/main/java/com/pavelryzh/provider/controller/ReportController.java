@@ -2,6 +2,7 @@ package com.pavelryzh.provider.controller;
 
 import com.pavelryzh.provider.dto.report.ReportCreateDto;
 import com.pavelryzh.provider.dto.report.ReportResponseDto;
+import com.pavelryzh.provider.model.ReportId;
 import com.pavelryzh.provider.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -48,5 +49,33 @@ public class ReportController {
                 .toUri();
 
         return ResponseEntity.created(location).body(createdReport);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/recalculate")
+    public ResponseEntity<ReportResponseDto> recalculateReport(
+            @RequestParam("year") Integer year,
+            @RequestParam("tariffId") Long tariffId) {
+
+        ReportId reportId = new ReportId(year, tariffId);
+
+        ReportResponseDto updatedReport = reportService.recalculateReport(reportId);
+
+        log.info("update report: {}", updatedReport);
+        return ResponseEntity.ok(updatedReport);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping
+    public ResponseEntity<Void> deleteReport(
+            @RequestParam("year") Integer year,
+            @RequestParam("tariffId") Long tariffId) {
+
+        log.info("Запрос на удаление отчета за {} год для тарифа {}", year, tariffId);
+
+        ReportId reportId = new ReportId(year, tariffId);
+        reportService.deleteReportById(reportId);
+
+        return ResponseEntity.noContent().build();
     }
 }

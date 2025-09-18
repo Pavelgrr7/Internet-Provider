@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/services")
 public class ServiceController {
@@ -25,6 +27,12 @@ public class ServiceController {
     public ResponseEntity<AdditionalServiceResponseDto> create(@RequestBody AddNewServiceRequestDto request ) {
         var newService = additionalServiceService.create(request.getTariffId(), request.getServiceName(), request.getServiceCost());
         return ResponseEntity.ok(newService);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AdditionalServiceResponseDto>> getAll() {
+        var allServices = additionalServiceService.getAll();
+        return ResponseEntity.ok(allServices);
     }
 
 }

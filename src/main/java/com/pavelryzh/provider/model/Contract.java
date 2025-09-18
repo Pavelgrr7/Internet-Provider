@@ -44,8 +44,8 @@ public class Contract {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "contract_services",  // связующая таблица
-            joinColumns = @JoinColumn(name = "contract_id"), // поле contract id ссылается на ТЕКУЩУЮ сущность (Contract)
-            inverseJoinColumns = @JoinColumn(name = "service_id") // поле service id на ДРУГУЮ сущность (AdditionalService)
+            joinColumns = @JoinColumn(name = "contract_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id") // поле service id ссылается на сущность AdditionalService
     )
     private List<AdditionalService> services;
 }

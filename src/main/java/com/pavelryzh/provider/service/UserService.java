@@ -1,11 +1,13 @@
 package com.pavelryzh.provider.service;
 
+import com.pavelryzh.provider.dto.CreateFullPackageDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.admin.AdminResponseDto;
 import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberCreateDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberResponseDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
@@ -31,4 +33,6 @@ public interface UserService {
     void updatePassport(Long id, @NotBlank String value);
 
     void updateLogin(Long id, @NotBlank String value);
+
+    AdminSubscriberDetailsDto createSubscriberAndFirstContract(@Valid CreateFullPackageDto fullPackage);
 }

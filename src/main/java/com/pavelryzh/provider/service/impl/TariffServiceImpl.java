@@ -10,10 +10,12 @@ import com.pavelryzh.provider.exception.ResourceNotFoundException;
 import com.pavelryzh.provider.model.AdditionalService;
 import com.pavelryzh.provider.model.Contract;
 import com.pavelryzh.provider.model.Tariff;
+import com.pavelryzh.provider.repository.AdditionalServiceRepository;
 import com.pavelryzh.provider.repository.ContractRepository;
 import com.pavelryzh.provider.repository.ServiceRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.service.TariffService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 @Service
 public class TariffServiceImpl implements TariffService {
 
@@ -33,7 +36,7 @@ public class TariffServiceImpl implements TariffService {
     private final ContractRepository contractRepository;
     private final ServiceRepository serviceRepository;
 
-    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository, ServiceRepository serviceRepository) {
+    public TariffServiceImpl(TariffRepository tariffRepository, ContractRepository contractRepository, ServiceRepository serviceRepository, AdditionalServiceRepository additionalServiceRepository) {
         this.tariffRepository = tariffRepository;
         this.contractRepository = contractRepository;
         this.serviceRepository = serviceRepository;
@@ -59,10 +62,15 @@ public class TariffServiceImpl implements TariffService {
         // --- Маппинг из DTO в Entity ---
         Tariff tariff = toEntity(createDto);
 
-        // --- Взаимодействие с репозиторием ---
+        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
+            List<AdditionalService> servicesToLink = serviceRepository.findAllById(createDto.getServiceIds());
+            tariff.setAvailableServices(servicesToLink);
+        }
+        log.info("tried to create tariff: {}", tariff);
         Tariff savedTariff = tariffRepository.save(tariff);
 
-        // --- Маппинг из Entity в Response DTO ---
+
+
         return toResponseDto(savedTariff);
     }
 
@@ -277,6 +285,15 @@ public class TariffServiceImpl implements TariffService {
         tariff.setInstallationFee(createDto.getInstallationFee());
         tariff.setIpAddressType(createDto.getIpAddressType());
         tariff.setStartDate(createDto.getStartDate());
+
+//        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
+//            List<AdditionalService> services = createDto.getServiceIds().stream()
+//                    .map(serviceId -> serviceRepository.findById(serviceId)
+//                            .orElseThrow(() -> new ResourceNotFoundException("Услуга с ID " + serviceId + " не найдена")))
+//                    .collect(Collectors.toList());
+//
+//            tariff.setAvailableServices(services);
+//        }
         return tariff;
     }
 

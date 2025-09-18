@@ -1,24 +1,24 @@
 package com.pavelryzh.provider.dto.contract;
 
-import jakarta.validation.constraints.NotBlank;
+
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
-public class ContractCreateDto {
+@AllArgsConstructor
+public class ContractWithoutUserCreateDto {
 
-    private Long subscriberId;
+    @NotNull
+    private String contractNumber;
 
-    @NotNull(message = "Необходимо выбрать тариф")
+    @NotNull
     private Long tariffId;
 
-    @NotBlank(message = "Адрес предоставления услуги обязателен")
+    @NotNull(message = "Адрес предоставления услуги обязателен")
     private String serviceAddress;
 
     @NotNull(message = "Дата подписания договора обязательна")
@@ -27,5 +27,6 @@ public class ContractCreateDto {
     @NotNull(message = "Дата начала предоставления услуг обязательна")
     private LocalDate serviceStartDate;
 
-    private List<Long> serviceIds;
+    private BigDecimal monthlyFee;
 }
+

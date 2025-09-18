@@ -40,4 +40,10 @@ public class AdditionalServiceServiceImpl implements AdditionalServiceService {
 
         return AdditionalServiceMapper.toDto(newService);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdditionalServiceResponseDto> getAll() {
+        return AdditionalServiceMapper.toDtoList(serviceRepository.findAll());
+    }
 }
