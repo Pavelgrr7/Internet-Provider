@@ -1,0 +1,33 @@
+services:
+  # Сервис бд
+  db:
+    image: postgres:15-alpine
+    container_name: provider_db_container
+    restart: always
+    environment:
+      POSTGRES_DB: provider_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432" # Порт доступен снаружи
+    volumes:
+      - db_data:/var/lib/postgresql/data
+# Сервис с бэкендом
+  backend:
+    build: .
+    container_name: provider_backend_container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # переопределённые настройки application.properties
+
+      # В ссылке имя сервиса ('db')
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/provider_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+
+
+volumes:
+  db_data:
