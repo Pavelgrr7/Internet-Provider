@@ -31,7 +31,13 @@ public class SecurityConfig {
 
     private final AuthenticationProvider authenticationProvider;
 
-    private static final String[] WHITE_LIST_URL = { "/api/auth/login"};
+    private static final String[] WHITE_LIST_URL = {
+            "/api/auth/login",
+            "/api/auth/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtAuthFilter jwtAuthFilter, AuthEntryPointJwt unauthorizedHandler
     ) {

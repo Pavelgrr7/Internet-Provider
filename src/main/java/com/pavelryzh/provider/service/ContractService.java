@@ -3,6 +3,7 @@ package com.pavelryzh.provider.service;
 import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
+import com.pavelryzh.provider.dto.contract.DeleteContractResponseDto;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 
@@ -27,4 +28,6 @@ public interface ContractService {
     void changeStartDate(Long id, Long contractId, String newStartDate);
 
     void removeServiceFromContract(Long userId, Long contractId, Long serviceId);
+
+    DeleteContractResponseDto deleteContract(Long contractId);
 }

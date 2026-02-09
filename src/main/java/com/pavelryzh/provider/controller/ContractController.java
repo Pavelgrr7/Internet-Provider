@@ -3,6 +3,7 @@ package com.pavelryzh.provider.controller;
 import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
+import com.pavelryzh.provider.dto.contract.DeleteContractResponseDto;
 import com.pavelryzh.provider.dto.service.AddServiceRequestDto;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffRequestDto;
@@ -70,6 +71,17 @@ public class ContractController {
         log.info("Detailed contracts response {}", contracts);
         return ResponseEntity.ok(contracts);
     }
+
+    @DeleteMapping("/{contractId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DeleteContractResponseDto> deleteContractById(@PathVariable Long contractId){
+
+        var response = contractService.deleteContract(contractId);
+
+        log.info("Запрос на удаление договора, ответ: {}", response);
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("/{contractId}")
     @PreAuthorize("hasRole('ADMIN')")
