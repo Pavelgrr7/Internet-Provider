@@ -9,7 +9,6 @@ import com.pavelryzh.provider.dto.tariff.TariffUpdateDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public interface TariffService {

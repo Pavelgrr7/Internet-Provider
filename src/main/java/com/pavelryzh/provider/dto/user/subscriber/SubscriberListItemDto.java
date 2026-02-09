@@ -1,6 +1,5 @@
 package com.pavelryzh.provider.dto.user.subscriber;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;

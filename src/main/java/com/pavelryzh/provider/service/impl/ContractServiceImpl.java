@@ -3,6 +3,7 @@ package com.pavelryzh.provider.service.impl;
 import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.contract.ContractResponseDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
+import com.pavelryzh.provider.dto.contract.DeleteContractResponseDto;
 import com.pavelryzh.provider.dto.mapper.AdditionalServiceMapper;
 import com.pavelryzh.provider.dto.tariff.ChangeTariffPreviewDto;
 import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
@@ -161,6 +162,8 @@ public class ContractServiceImpl implements ContractService {
         return toResponseDto(contractRepository.findById(contractId).orElseThrow(() -> new ResourceNotFoundException("Контракт с ID " + contractId + " не найден.")));
     }
 
+
+
     @Override
     public Map<Long, List<ContractInfo>> getContractInfoForUserIds(List<Long> subscriberIds) {
         Map<Long, List<ContractInfo>> contractsInfoMap = new HashMap<>();
@@ -206,6 +209,38 @@ public class ContractServiceImpl implements ContractService {
         recalculateAndSetMonthlyFee(contract);
 
          contractRepository.save(contract); // для читаемости
+    }
+
+    @Transactional
+    public DeleteContractResponseDto deleteContract(Long contractId) {
+        // 1. Находим договор
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResourceNotFoundException("Договор не найден"));
+
+        // 2. Получаем ID абонента ДО удаления договора
+        Long subscriberId = contract.getSubscriber().getId();
+
+        // 3. Удаляем сам договор
+        // Сначала нужно разорвать связи в contract_services! (Ответ на ваш мини-вопрос)
+        contract.getServices().clear(); // Hibernate удалит записи из связующей таблицы
+        contractRepository.delete(contract);
+
+        // 4. Проверяем, остались ли у абонента другие договоры
+        if (!contractRepository.existsBySubscriber_Id(subscriberId)) {
+            // Если договоров не осталось - удаляем абонента
+            userRepository.deleteById(subscriberId);
+
+            // Возвращаем ответ, что абонент был удален
+            return DeleteContractResponseDto.builder()
+                    .subscriberDeleted(true)
+                    .deletedSubscriberId(subscriberId)
+                    .build();
+        }
+
+        // Если договоры остались, возвращаем ответ, что абонент НЕ был удален
+        return DeleteContractResponseDto.builder()
+                .subscriberDeleted(false)
+                .build();
     }
 
     @Override

@@ -40,8 +40,7 @@ public abstract class User implements UserDetails {
     @Email
     private String email;
 
-
-        @Override
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(getRole()));
     }
@@ -54,26 +53,6 @@ public abstract class User implements UserDetails {
     @Override
     public String getUsername() {
         return login;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
     }
 
     @Transient

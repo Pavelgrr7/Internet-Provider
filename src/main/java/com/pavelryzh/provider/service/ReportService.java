@@ -2,9 +2,7 @@ package com.pavelryzh.provider.service;
 
 import com.pavelryzh.provider.dto.report.ReportCreateDto;
 import com.pavelryzh.provider.dto.report.ReportResponseDto;
-import com.pavelryzh.provider.dto.tariff.TariffResponseDto;
 import com.pavelryzh.provider.model.ReportId;
-import jakarta.validation.Valid;
 
 import java.util.List;
 

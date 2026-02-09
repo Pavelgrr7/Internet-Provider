@@ -1,9 +1,6 @@
 package com.pavelryzh.provider.dto.user.admin;
 
-import com.pavelryzh.provider.dto.contract.ContractResponseDto;
-import com.pavelryzh.provider.dto.contract.ContractSummaryDto;
 import com.pavelryzh.provider.dto.contract.ContractWithServicesDto;
-import com.pavelryzh.provider.dto.user.subscriber.ContractInfo;
 import lombok.Data;
 
 import java.util.List;
