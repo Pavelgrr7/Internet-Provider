@@ -4,12 +4,12 @@ import com.pavelryzh.provider.dto.CreateFullPackageDto;
 import com.pavelryzh.provider.dto.UpdateFieldRequestDto;
 import com.pavelryzh.provider.dto.user.EmailChangeDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
+import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import com.pavelryzh.provider.dto.user.subscriber.SubscriberListItemDto;
 import com.pavelryzh.provider.model.Administrator;
 import com.pavelryzh.provider.model.Subscriber;
 import com.pavelryzh.provider.model.User;
 import com.pavelryzh.provider.service.UserService;
-import com.pavelryzh.provider.dto.user.admin.AdminSubscriberDetailsDto;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,8 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 @Slf4j

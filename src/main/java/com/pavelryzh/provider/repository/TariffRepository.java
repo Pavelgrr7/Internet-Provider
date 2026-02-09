@@ -1,7 +1,5 @@
 package com.pavelryzh.provider.repository;
 
-import com.pavelryzh.provider.dto.service.AdditionalServiceResponseDto;
-import com.pavelryzh.provider.model.AdditionalService;
 import com.pavelryzh.provider.model.Tariff;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

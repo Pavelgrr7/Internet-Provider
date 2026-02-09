@@ -1,7 +1,7 @@
 package com.pavelryzh.provider.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.pavelryzh.provider.model.Contract;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 

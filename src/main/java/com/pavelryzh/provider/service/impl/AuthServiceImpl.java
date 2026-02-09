@@ -3,12 +3,12 @@ package com.pavelryzh.provider.service.impl;
 import com.pavelryzh.provider.dto.auth.AuthResponseDto;
 import com.pavelryzh.provider.service.AuthService;
 import com.pavelryzh.provider.service.JwtService;
-import org.springframework.stereotype.Service;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AuthServiceImpl implements AuthService {

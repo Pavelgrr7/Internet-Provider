@@ -7,7 +7,6 @@ import com.pavelryzh.provider.model.Tariff;
 import com.pavelryzh.provider.repository.ServiceRepository;
 import com.pavelryzh.provider.repository.TariffRepository;
 import com.pavelryzh.provider.service.AdditionalServiceService;
-import com.pavelryzh.provider.service.TariffService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

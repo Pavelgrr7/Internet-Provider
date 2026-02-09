@@ -1,7 +1,7 @@
 package com.pavelryzh.provider.service.impl;
 
 import com.pavelryzh.provider.dto.CreateFullPackageDto;
-import com.pavelryzh.provider.dto.contract.*;
+import com.pavelryzh.provider.dto.contract.ContractCreateDto;
 import com.pavelryzh.provider.dto.user.PasswordChangeDto;
 import com.pavelryzh.provider.dto.user.UserCreateDto;
 import com.pavelryzh.provider.dto.user.admin.AdminResponseDto;
@@ -19,9 +19,9 @@ import com.pavelryzh.provider.repository.UserRepository;
 import com.pavelryzh.provider.service.ContractService;
 import com.pavelryzh.provider.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
