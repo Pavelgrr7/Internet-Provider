@@ -3,6 +3,7 @@ package com.pavelryzh.provider.controller;
 import com.pavelryzh.provider.dto.auth.AuthResponseDto;
 import com.pavelryzh.provider.dto.auth.LoginRequestDto;
 import com.pavelryzh.provider.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +25,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest, HttpServletRequest request) {
         // Сервис аутентификации проверит данные и в случае успеха вернет DTO с токеном
-        log.info("Попытка аутентификации: {}", loginRequest);
+        log.info("Попытка аутентификации от IP: {}. Логин: {}", request.getRemoteAddr(), loginRequest.getLogin());
         AuthResponseDto authResponse = authService.attemptLogin(loginRequest.getLogin(), loginRequest.getPassword());
-        log.info("Ответ: {}", authResponse);
         return ResponseEntity.ok(authResponse);
     }
 }
