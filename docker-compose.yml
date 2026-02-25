@@ -12,16 +12,25 @@ services:
       - "5432:5432" # Порт доступен снаружи
     volumes:
       - db_data:/var/lib/postgresql/data
-# Сервис с бэкендом
-  backend:
+
+# Сервис с бэкендом 1
+  backend1:
     build: .
-    container_name: provider_backend_container
+    container_name: provider_backend_1
     depends_on:
       - db
     environment:
-      # переопределённые настройки application.properties
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/provider_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
 
-      # В ссылке имя сервиса ('db')
+  # Сервис с бэкендом 2
+  backend2:
+    build: .
+    container_name: provider_backend_2
+    depends_on:
+      - db
+    environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/provider_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
@@ -35,7 +44,8 @@ services:
       # Пробрасываю конфиг внутрь контейнера
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
+      - backend1
+      - backend2
 
 volumes:
   db_data:
